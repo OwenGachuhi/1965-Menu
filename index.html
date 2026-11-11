@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Today's cafeteria menu, prices, hours, and nutrition calculator." />
+  <meta name="theme-color" content="#065f46" />
+  <title>1965 Cafeteria Menu</title>
+
+  <!-- Tailwind CSS (Play CDN, pinned version). No build step required. -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- Lucide icons (pinned version with Subresource Integrity). -->
+  <script defer src="https://unpkg.com/lucide@1.72.0/dist/umd/lucide.min.js"
+          integrity="sha384-LJKEYnLhvei+XTxKjLahwKnS/kWFWfkb3n+v8n7YKWAAS3oamYHQyT4Bwch3XplL"
+          crossorigin="anonymous"></script>
+  <script defer src="app.js"></script>
+
+  <style>
+    /* Keyboard focus is always visible. */
+    :focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
+    dialog::backdrop { background: rgb(15 23 42 / 0.6); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { scrollbar-width: none; }
+    [data-lucide] { width: 1.1em; height: 1.1em; display: inline-block; vertical-align: -0.15em; }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  </style>
+</head>
+<body class="min-h-screen bg-stone-50 text-slate-900 antialiased">
+  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:shadow">Skip to menu</a>
+
+  <!-- Header + Operating Hours & Live Status banner -->
+  <header class="bg-emerald-900 text-white">
+    <div class="mx-auto max-w-6xl px-4 pb-5 pt-5 sm:px-6">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-emerald-200">Cafeteria Menu</p>
+          <h1 id="cafeteria-name" class="text-2xl font-extrabold sm:text-3xl">1965 Cafeteria</h1>
+        </div>
+        <button id="header-manager-btn" type="button"
+                class="hidden shrink-0 items-center gap-1 rounded-lg bg-white/10 px-3 py-2 text-sm font-semibold hover:bg-white/20">
+          <i data-lucide="chef-hat" aria-hidden="true"></i> <span class="hidden sm:inline">Manager</span> Dashboard
+        </button>
+      </div>
+      <section id="status-banner" aria-labelledby="hours-heading" class="mt-4">
+        <h2 id="hours-heading" class="sr-only">Operating hours and live status</h2>
+        <p class="text-emerald-100">Loading hours…</p>
+      </section>
+    </div>
+  </header>
+
+  <!-- Station tabs -->
+  <nav aria-label="Stations" class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+    <div id="station-tabs" role="tablist" aria-label="Cafeteria stations"
+         class="no-scrollbar mx-auto flex max-w-6xl gap-2 overflow-x-auto px-4 py-3 sm:px-6"></div>
+  </nav>
+
+  <main id="main" tabindex="-1" class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+    <div id="app" role="tabpanel" aria-live="off">
+      <p class="py-16 text-center text-slate-500">Loading menu…</p>
+    </div>
+  </main>
+
+  <footer class="mt-10 border-t border-slate-200 bg-white">
+    <div class="mx-auto max-w-6xl space-y-4 px-4 py-8 text-sm text-slate-600 sm:px-6">
+      <p id="nutrition-advisory" class="flex gap-2">
+        <i data-lucide="info" aria-hidden="true" class="mt-0.5 shrink-0"></i>
+        <span>2,000 calories a day is used for general nutrition advice, but calorie needs vary. Additional nutritional and allergy information available upon request.</span>
+      </p>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p id="last-updated" class="text-xs text-slate-500"></p>
+        <button id="manager-login-btn" type="button"
+                class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-slate-500 underline-offset-2 hover:text-slate-800 hover:underline">
+          <i data-lucide="lock" aria-hidden="true"></i> Kitchen Manager Login
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Kitchen Manager Login dialog -->
+  <dialog id="login-dialog" aria-labelledby="login-title"
+          class="w-[min(28rem,calc(100%-2rem))] rounded-2xl p-0 shadow-2xl">
+    <form id="login-form" class="space-y-4 p-6" novalidate>
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 id="login-title" class="text-xl font-bold">Kitchen Manager Login</h2>
+          <p class="mt-1 text-sm text-slate-600">Unlock the menu editor. GitHub details are only needed to publish live.</p>
+        </div>
+        <button type="button" data-close-dialog class="rounded-md p-1 text-slate-500 hover:bg-slate-100" aria-label="Close login">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div>
+        <label for="login-passcode" class="block text-sm font-semibold">Admin Passcode</label>
+        <input id="login-passcode" name="passcode" type="password" required autocomplete="current-password"
+               class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-emerald-600" />
+      </div>
+
+      <fieldset class="space-y-3 rounded-xl border border-slate-200 p-4">
+        <legend class="px-1 text-sm font-semibold">GitHub Publishing (optional)</legend>
+        <div>
+          <label for="login-repo" class="block text-sm font-medium">Repository <span class="font-normal text-slate-500">(owner/repo)</span></label>
+          <input id="login-repo" name="repo" type="text" placeholder="owner/repo" autocomplete="off" spellcheck="false"
+                 class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm" />
+        </div>
+        <div>
+          <label for="login-branch" class="block text-sm font-medium">Branch</label>
+          <input id="login-branch" name="branch" type="text" placeholder="main" autocomplete="off" spellcheck="false"
+                 class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm" />
+        </div>
+        <div>
+          <label for="login-token" class="block text-sm font-medium">GitHub Personal Access Token</label>
+          <input id="login-token" name="token" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"
+                 class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm" />
+        </div>
+        <label class="flex items-start gap-2 text-sm">
+          <input id="login-remember" name="remember" type="checkbox" class="mt-1 h-4 w-4 accent-emerald-700" />
+          <span>Remember token on this device <span class="block text-xs text-slate-500">Only use on your own phone or computer.</span></span>
+        </label>
+      </fieldset>
+
+      <p id="login-error" role="alert" class="hidden rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-800"></p>
+
+      <button type="submit" class="w-full rounded-lg bg-emerald-800 px-4 py-2.5 font-semibold text-white hover:bg-emerald-900">
+        Unlock Editor
+      </button>
+    </form>
+  </dialog>
+
+  <!-- Kitchen Manager Dashboard dialog -->
+  <dialog id="manager-dialog" aria-labelledby="manager-title"
+          class="m-0 h-full max-h-none w-full max-w-none bg-stone-50 p-0 sm:m-auto sm:h-[92vh] sm:w-[min(64rem,calc(100%-2rem))] sm:rounded-2xl sm:shadow-2xl">
+    <div class="flex h-full flex-col">
+      <div class="flex items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3">
+        <div class="min-w-0">
+          <h2 id="manager-title" class="flex items-center gap-2 text-lg font-bold"><i data-lucide="chef-hat" aria-hidden="true"></i> Kitchen Manager Dashboard</h2>
+          <p id="manager-dirty" class="text-xs text-slate-500" aria-live="polite">All changes published.</p>
+        </div>
+        <button type="button" data-close-dialog class="rounded-md p-2 text-slate-600 hover:bg-slate-100" aria-label="Close dashboard (changes are kept)">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div id="manager-tabs" role="tablist" aria-label="Dashboard sections"
+           class="no-scrollbar flex gap-2 overflow-x-auto border-b border-slate-200 bg-white px-4 py-2"></div>
+
+      <div id="manager-body" role="tabpanel" class="flex-1 overflow-y-auto px-4 py-4"></div>
+
+      <div class="border-t border-slate-200 bg-white px-4 py-3">
+        <p id="manager-status" role="status" aria-live="polite" class="mb-2 hidden rounded-lg px-3 py-2 text-sm font-medium"></p>
+        <div class="flex flex-wrap gap-2">
+          <button id="publish-btn" type="button" class="inline-flex items-center gap-2 rounded-lg bg-emerald-800 px-4 py-2 font-semibold text-white hover:bg-emerald-900 disabled:cursor-wait disabled:opacity-60">
+            <i data-lucide="cloud-upload" aria-hidden="true"></i> Publish Live to GitHub
+          </button>
+          <button id="download-btn" type="button" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 font-semibold hover:bg-slate-50">
+            <i data-lucide="download" aria-hidden="true"></i> Download <code>menu.json</code> (Backup)
+          </button>
+          <button id="discard-btn" type="button" class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">
+            <i data-lucide="rotate-ccw" aria-hidden="true"></i> Discard changes
+          </button>
+          <button id="logout-btn" type="button" class="ml-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">
+            <i data-lucide="log-out" aria-hidden="true"></i> Log out
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+</body>
+</html>
