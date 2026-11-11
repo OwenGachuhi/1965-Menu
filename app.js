@@ -48,6 +48,8 @@
     published: '',       // JSON string of the last loaded / published menu
     activeTab: 'all',
     selections: {},      // stationId -> array of selected item ids (calculators)
+    cart: {},            // "stationId::itemId" -> quantity (estimated cart)
+    cartOpen: false,
     lastStatus: null,
     unlocked: false,
     managerTab: 'settings',
@@ -386,11 +388,14 @@
   const itemName = (item) =>
     `${esc(item.name)}${item.bracket ? ` <span class="font-medium text-slate-600">(${esc(item.bracket)})</span>` : ''}`;
 
-  function itemCard(item) {
+  function itemCard(item, station, section) {
     const sold = !item.available;
+    // Priced items outside the calculators can be added to the estimated cart.
+    const key = cartKey(station, item);
+    const addable = !sold && isNum(item.price) && !section.builder;
     return `
-      <li class="relative rounded-xl border p-4 shadow-sm ${sold ? 'border-slate-300 bg-slate-100' : 'border-slate-200 bg-white'}">
-        <div class="${sold ? 'opacity-50 grayscale' : ''}">
+      <li class="relative flex flex-col rounded-xl border p-4 shadow-sm ${sold ? 'border-slate-300 bg-slate-100' : 'border-slate-200 bg-white'}">
+        <div class="flex-1 ${sold ? 'opacity-50 grayscale' : ''}">
           <div class="flex items-start justify-between gap-3">
             <h4 class="font-semibold leading-snug ${sold ? 'line-through decoration-2' : ''}">${itemName(item)}</h4>
             ${isNum(item.price) ? `<span class="whitespace-nowrap font-bold text-emerald-900">${fmtPrice(item.price)}</span>` : ''}
@@ -398,11 +403,12 @@
           ${item.description ? `<p class="mt-1 text-sm text-slate-600">${esc(item.description)}</p>` : ''}
           ${itemChips(item)}
         </div>
+        ${addable ? `<div class="mt-3 flex justify-end" data-cart-ctl="${esc(key)}">${cartControl(key, item)}</div>` : ''}
         ${sold ? soldOutBadge() : ''}
       </li>`;
   }
 
-  function sectionCards(section) {
+  function sectionCards(section, station) {
     const headingId = `sec-${section.id}`;
     return `
       <section aria-labelledby="${esc(headingId)}" class="mt-6">
@@ -411,7 +417,7 @@
           ${section.price_note ? `<p class="text-sm font-semibold text-emerald-800">${esc(section.price_note)}</p>` : ''}
         </div>
         ${section.items.length
-          ? `<ul class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">${section.items.map(itemCard).join('')}</ul>`
+          ? `<ul class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">${section.items.map((item) => itemCard(item, station, section)).join('')}</ul>`
           : '<p class="mt-3 text-sm text-slate-500">No items listed right now.</p>'}
       </section>`;
   }
@@ -520,13 +526,13 @@
     if (station.pricing_model === 'by_weight') {
       const rate = isNum(station.price_per_lb) ? `${fmtPrice(station.price_per_lb)}/lb` : 'Weighed';
       priceBlock = `
-        ${label('Est. cart price')}
+        ${label('Est. price')}
         <p class="text-2xl font-extrabold text-slate-900">By weight</p>
         <p class="text-xs text-slate-600">${esc(rate)} at the register${taxRate() > 0 ? ` + ${esc(taxText())}` : ''}</p>`;
     } else {
       const { subtotal, tax, total } = cartPrice(picked);
       priceBlock = `
-        ${label('Est. cart price')}
+        ${label('Est. price')}
         <p class="text-2xl font-extrabold text-slate-900">${fmtPrice(total)}</p>
         <p class="text-xs text-slate-600">${taxRate() > 0
           ? `${fmtPrice(subtotal)} + ${fmtPrice(tax)} ${esc(taxText())}`
@@ -549,18 +555,222 @@
         </button>
       </div>
       ${missingCalories ? '<p class="mt-1 text-xs text-slate-500">* Some selected items do not list calories. Ask staff for full nutrition details.</p>' : ''}
-      <p class="mt-1 text-xs text-slate-500">Estimate only. The register total is final.</p>`;
+      <p class="mt-1 text-xs text-slate-500">Estimate only. Your selections are also added to the estimated cart at the bottom of the screen.</p>`;
   }
 
   // ---- Sales tax (rate is editable in the Kitchen Manager dashboard) ----
   const taxRate = () => (isNum(state.menu.settings.sales_tax_percent) ? state.menu.settings.sales_tax_percent : 0);
   const taxText = () => `${state.menu.settings.sales_tax_label || 'sales tax'} (${taxRate()}%)`;
 
-  function cartPrice(items) {
-    // Work in whole cents to avoid floating-point rounding errors.
-    const subtotalCents = items.reduce((sum, i) => sum + (isNum(i.price) ? Math.round(i.price * 100) : 0), 0);
+  // Work in whole cents to avoid floating-point rounding errors.
+  const priceCents = (item) => (isNum(item.price) ? Math.round(item.price * 100) : 0);
+
+  function totalsFromCents(subtotalCents) {
     const taxCents = Math.round((subtotalCents * taxRate()) / 100);
     return { subtotal: subtotalCents / 100, tax: taxCents / 100, total: (subtotalCents + taxCents) / 100 };
+  }
+
+  const cartPrice = (items) => totalsFromCents(items.reduce((sum, i) => sum + priceCents(i), 0));
+
+  // ---------------------------------------------------------------------------
+  // Public view: estimated cart (bottom of the screen)
+  //
+  // The cart is a price estimate only. It holds items added with "+ Add" on
+  // menu cards, plus whatever is checked in the Deli / Grill calculators.
+  // ---------------------------------------------------------------------------
+  const MAX_QTY = 20;
+  const cartKey = (station, item) => `${station.id}::${item.id}`;
+
+  function findCartItem(key) {
+    const [stationId, itemId] = key.split('::');
+    const station = state.menu.stations.find((s) => s.id === stationId);
+    if (!station) return null;
+    for (const sec of station.sections) {
+      if (sec.builder) continue;
+      const item = sec.items.find((i) => i.id === itemId);
+      if (item && item.available && isNum(item.price)) return { station, item };
+    }
+    return null;
+  }
+
+  function pruneCart() {
+    // Drop items that were deleted, repriced to blank, or marked Sold Out.
+    Object.keys(state.cart).forEach((key) => {
+      if (!findCartItem(key)) delete state.cart[key];
+    });
+  }
+
+  function cartControl(key, item) {
+    const qty = state.cart[key] || 0;
+    const name = esc(item.name);
+    const btn = 'inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-bold text-emerald-900 hover:bg-emerald-100';
+    if (!qty) {
+      return `<button type="button" data-cart-add="${esc(key)}" aria-label="Add ${name} to estimated cart"
+                      class="${btn} gap-1 border border-emerald-700 bg-white">${icon('plus')} Add</button>`;
+    }
+    return `
+      <div class="inline-flex items-center rounded-lg border border-emerald-700 bg-emerald-50">
+        <button type="button" data-cart-dec="${esc(key)}" aria-label="Remove one ${name}" class="${btn}">${icon('minus')}</button>
+        <span class="min-w-[2rem] text-center text-sm font-bold" aria-label="${qty} ${name} in cart">${qty}</span>
+        <button type="button" data-cart-inc="${esc(key)}" aria-label="Add one more ${name}" class="${btn}" ${qty >= MAX_QTY ? 'disabled' : ''}>${icon('plus')}</button>
+      </div>`;
+  }
+
+  function cartLines() {
+    const lines = [];
+    Object.entries(state.cart).forEach(([key, qty]) => {
+      const found = findCartItem(key);
+      if (found) lines.push({ type: 'item', key, qty, ...found, cents: priceCents(found.item) * qty });
+    });
+    state.menu.stations.forEach((station) => {
+      if (!station.builder) return;
+      const picked = getSelectedItems(station);
+      if (!picked.length) return;
+      const byWeight = station.pricing_model === 'by_weight';
+      lines.push({
+        type: 'plate', station, picked, byWeight,
+        cents: byWeight ? 0 : picked.reduce((sum, i) => sum + priceCents(i), 0),
+      });
+    });
+    return lines;
+  }
+
+  function cartSummary() {
+    const lines = cartLines();
+    const count = lines.reduce((n, l) => n + (l.type === 'item' ? l.qty : 1), 0);
+    const totals = totalsFromCents(lines.reduce((sum, l) => sum + l.cents, 0));
+    return { lines, count, ...totals, hasWeight: lines.some((l) => l.byWeight) };
+  }
+
+  function cartLineHtml(line) {
+    if (line.type === 'item') {
+      return `
+        <li class="flex items-center gap-3 py-2">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-semibold leading-snug">${itemName(line.item)}</p>
+            <p class="text-xs text-slate-500">${esc(line.station.name)} · ${fmtPrice(line.item.price)} each</p>
+          </div>
+          ${cartControl(line.key, line.item)}
+          <span class="w-20 shrink-0 text-right text-sm font-semibold">${fmtPrice(line.cents / 100)}</span>
+        </li>`;
+    }
+    return `
+      <li class="flex items-center gap-3 py-2">
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-semibold leading-snug">${esc(line.station.name)} ${line.byWeight ? 'sandwich' : 'plate'}</p>
+          <p class="text-xs text-slate-500">${esc(line.picked.map((i) => i.name).join(', '))}</p>
+        </div>
+        <button type="button" data-plate-remove="${esc(line.station.id)}" aria-label="Remove ${esc(line.station.name)} selections"
+                class="rounded-lg px-2 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50">Remove</button>
+        <span class="w-20 shrink-0 text-right text-sm font-semibold">${line.byWeight ? 'By weight' : fmtPrice(line.cents / 100)}</span>
+      </li>`;
+  }
+
+  function renderCartBar() {
+    const bar = $('#cart-bar');
+    if (!bar || !state.menu) return;
+    const { lines, count, subtotal, tax, total, hasWeight } = cartSummary();
+    const taxed = taxRate() > 0;
+    const hint = count
+      ? `${taxed ? `incl. ${fmtPrice(tax)} ${esc(taxText())}` : 'No sales tax added'}${hasWeight ? ' · Deli by weight not included' : ''}`
+      : 'Tap + Add on any item to estimate your total';
+
+    const panel = `
+      <div id="cart-panel" class="max-h-[55vh] overflow-y-auto border-b border-slate-200 px-4 pb-3 pt-4">
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-base font-bold">Estimated cart</h2>
+          ${count ? '<button type="button" data-cart-clear class="rounded-lg px-2 py-1 text-sm font-semibold text-red-700 hover:bg-red-50">Clear cart</button>' : ''}
+        </div>
+        ${lines.length
+          ? `<ul class="mt-1 divide-y divide-slate-100">${lines.map(cartLineHtml).join('')}</ul>`
+          : '<p class="mt-2 text-sm text-slate-600">Your cart is empty. Tap <strong>+ Add</strong> on a menu item, or check items in the Deli Hult and Broad Grill calculators.</p>'}
+        <dl class="mt-3 space-y-1 border-t border-slate-200 pt-3 text-sm">
+          <div class="flex justify-between"><dt>Subtotal</dt><dd>${fmtPrice(subtotal)}</dd></div>
+          ${taxed ? `<div class="flex justify-between"><dt>${esc(taxText())}</dt><dd>${fmtPrice(tax)}</dd></div>` : ''}
+          <div class="flex justify-between text-base font-extrabold text-emerald-900"><dt>Estimated total</dt><dd>${fmtPrice(total)}</dd></div>
+        </dl>
+        <p class="mt-2 text-xs text-slate-500">Estimate only. This is not an order; pay at the register, where prices and tax are final.${hasWeight ? ' Deli Hult is priced by weight and is not included in the total.' : ''}</p>
+      </div>`;
+
+    bar.innerHTML = `
+      <div class="mx-auto max-w-6xl px-2 pb-2 sm:px-6">
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_-6px_24px_rgba(0,0,0,0.12)]">
+          ${state.cartOpen ? panel : ''}
+          <button type="button" data-cart-toggle aria-expanded="${state.cartOpen}" aria-controls="cart-panel"
+                  class="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50">
+            <span class="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-800 text-lg text-white">
+              ${icon('shopping-cart')}
+              ${count ? `<span class="absolute -right-1 -top-1 grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-amber-400 px-1 text-xs font-bold text-amber-950">${count}</span>` : ''}
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-xs font-semibold uppercase tracking-wide text-slate-500">Estimated cart · ${count} ${count === 1 ? 'item' : 'items'}</span>
+              <span class="block truncate text-xs text-slate-600">${hint}</span>
+            </span>
+            <span class="text-xl font-extrabold text-emerald-900">${fmtPrice(total)}</span>
+            <span class="text-slate-500">${icon(state.cartOpen ? 'chevron-down' : 'chevron-up')}</span>
+            <span class="sr-only">${state.cartOpen ? 'Hide' : 'Show'} cart details</span>
+          </button>
+        </div>
+      </div>`;
+    refreshIcons();
+  }
+
+  function announceCart() {
+    const { count, total } = cartSummary();
+    $('#cart-live').textContent = `Estimated cart: ${count} ${count === 1 ? 'item' : 'items'}, ${fmtPrice(total)} with tax.`;
+  }
+
+  function setCartQty(key, qty) {
+    if (qty <= 0) delete state.cart[key];
+    else state.cart[key] = Math.min(qty, MAX_QTY);
+    const found = findCartItem(key);
+    $$(`[data-cart-ctl="${CSS.escape(key)}"]`).forEach((el) => {
+      el.innerHTML = found ? cartControl(key, found.item) : '';
+    });
+    renderCartBar();
+    announceCart();
+  }
+
+  // Handles cart buttons in the menu and in the cart bar. Returns true if handled.
+  function onCartClick(e) {
+    const el = e.target.closest('[data-cart-add],[data-cart-inc],[data-cart-dec],[data-cart-toggle],[data-cart-clear],[data-plate-remove]');
+    if (!el) return false;
+    const inBar = Boolean(el.closest('#cart-bar'));
+    const scope = inBar ? $('#cart-bar') : $('#app');
+    const d = el.dataset;
+    let focusSel = null;
+
+    if (d.cartAdd) {
+      setCartQty(d.cartAdd, 1);
+      focusSel = `[data-cart-inc="${CSS.escape(d.cartAdd)}"]`;
+    } else if (d.cartInc) {
+      setCartQty(d.cartInc, (state.cart[d.cartInc] || 0) + 1);
+      focusSel = `[data-cart-inc="${CSS.escape(d.cartInc)}"]`;
+    } else if (d.cartDec) {
+      const next = (state.cart[d.cartDec] || 0) - 1;
+      setCartQty(d.cartDec, next);
+      focusSel = next > 0 ? `[data-cart-dec="${CSS.escape(d.cartDec)}"]` : (inBar ? '[data-cart-toggle]' : `[data-cart-add="${CSS.escape(d.cartDec)}"]`);
+    } else if ('cartToggle' in d) {
+      state.cartOpen = !state.cartOpen;
+      renderCartBar();
+      focusSel = '[data-cart-toggle]';
+    } else if ('cartClear' in d) {
+      state.cart = {};
+      Object.keys(state.selections).forEach((sid) => { state.selections[sid] = []; });
+      renderView();
+      refreshIcons();
+      announceCart();
+      focusSel = '[data-cart-toggle]';
+    } else if (d.plateRemove) {
+      state.selections[d.plateRemove] = [];
+      $$(`input[data-builder="${CSS.escape(d.plateRemove)}"]`).forEach((i) => { i.checked = false; });
+      updateTotals(d.plateRemove);
+      announceCart();
+      focusSel = '[data-cart-toggle]';
+    }
+    refreshIcons();
+    if (focusSel) (scope.querySelector(focusSel) || $('[data-cart-toggle]'))?.focus();
+    return true;
   }
 
   function builderPanel(station) {
@@ -588,7 +798,7 @@
               </fieldset>`)
             .join('')}
         </div>
-        <div id="totals-${esc(station.id)}" class="sticky bottom-0 rounded-b-2xl border-t border-slate-200 bg-white/95 p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur">
+        <div id="totals-${esc(station.id)}" style="bottom: var(--cart-h, 0px)" class="sticky rounded-b-2xl border-t border-slate-200 bg-white/95 p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur">
           ${builderTotals(station)}
         </div>
       </section>`;
@@ -597,10 +807,9 @@
   function updateTotals(stationId) {
     const station = state.menu.stations.find((s) => s.id === stationId);
     const box = $(`#totals-${CSS.escape(stationId)}`);
-    if (station && box) {
-      box.innerHTML = builderTotals(station);
-      refreshIcons();
-    }
+    if (station && box) box.innerHTML = builderTotals(station);
+    renderCartBar();
+    refreshIcons();
   }
 
   function onBuilderChange(e) {
@@ -628,6 +837,7 @@
   }
 
   function onAppClick(e) {
+    if (onCartClick(e)) return;
     const reset = e.target.closest('[data-reset-builder]');
     if (reset) {
       const sid = reset.dataset.resetBuilder;
@@ -657,7 +867,7 @@
             <article class="rounded-2xl border border-slate-200 bg-white/60 p-4 sm:p-6">
               ${stationHeader(st, status)}
               ${weightBanner(st)}
-              ${st.sections.map(sectionCards).join('')}
+              ${st.sections.map((sec) => sectionCards(sec, st)).join('')}
               ${st.builder
                 ? `<button type="button" data-goto-tab="${esc(st.id)}"
                            class="mt-5 inline-flex items-center gap-2 rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-900">
@@ -676,7 +886,7 @@
         ${stationHeader(station, status)}
         ${weightBanner(station)}
         ${station.builder && builderSections(station).length ? builderPanel(station) : ''}
-        ${plainSections.map(sectionCards).join('')}
+        ${plainSections.map((sec) => sectionCards(sec, station)).join('')}
       </article>`;
   }
 
@@ -684,7 +894,9 @@
     pruneSelections();
     const status = getStatus();
     const station = state.menu.stations.find((s) => s.id === state.activeTab);
+    pruneCart();
     $('#app').innerHTML = station ? renderStation(station, status) : renderAllStations(status);
+    renderCartBar();
   }
 
   function renderChrome() {
@@ -1454,6 +1666,20 @@
     $('#station-tabs').addEventListener('keydown', onTabKeydown);
     $('#app').addEventListener('change', onBuilderChange);
     $('#app').addEventListener('click', onAppClick);
+    $('#cart-bar').addEventListener('click', onCartClick);
+    $('#cart-bar').addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && state.cartOpen) {
+        state.cartOpen = false;
+        renderCartBar();
+        $('[data-cart-toggle]')?.focus();
+      }
+    });
+    // Keep page content and sticky calculator totals clear of the fixed cart bar.
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(() => {
+        document.documentElement.style.setProperty('--cart-h', `${$('#cart-bar').offsetHeight}px`);
+      }).observe($('#cart-bar'));
+    }
 
     const openManagerOrLogin = () => (state.unlocked ? openManager() : openLogin());
     $('#manager-login-btn').addEventListener('click', openManagerOrLogin);
