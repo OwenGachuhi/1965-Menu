@@ -112,10 +112,6 @@
 
   const serializeMenu = (menu) => `${JSON.stringify(menu, null, 2)}\n`;
 
-  function defaultAfternoonNotice(hours) {
-    return `From ${fmtTime(hours.lunch_end)} to ${fmtTime(hours.espresso_close)}, main stations are closed; only the Espresso Bar is open, serving coffee and Bakery items.`;
-  }
-
   // ---------------------------------------------------------------------------
   // Menu loading + normalisation
   // ---------------------------------------------------------------------------
@@ -123,6 +119,8 @@
     return {
       id: String(item.id || uid('item')),
       name: String(item.name ?? ''),
+      // Optional text shown in brackets after the name, e.g. this week's pizza flavor.
+      ...(item.bracket ? { bracket: String(item.bracket) } : {}),
       price: isNum(item.price) ? item.price : null,
       calories: isNum(item.calories) ? item.calories : null,
       description: String(item.description ?? ''),
@@ -156,20 +154,18 @@
     delete hours.open;
     delete hours.main_close;
     delete hours.main_label;
+    delete hours.afternoon_notice; // The late-afternoon callout was removed.
     menu.hours = Object.assign(
       {
         breakfast_start: '08:00',
-        breakfast_end: '10:30',
-        lunch_start: '10:30',
-        lunch_end: '14:30',
-        espresso_open: '08:00',
-        espresso_close: '16:00',
+        breakfast_end: '11:30',
+        lunch_start: '11:30',
+        lunch_end: '15:00',
+        espresso_open: '14:00',
+        espresso_close: '18:00',
       },
       hours,
     );
-    if (typeof menu.hours.afternoon_notice !== 'string') {
-      menu.hours.afternoon_notice = defaultAfternoonNotice(menu.hours);
-    }
     menu.stations = (Array.isArray(menu.stations) ? menu.stations : []).map((st) => ({
       ...st,
       id: String(st.id || uid('station')),
@@ -272,12 +268,7 @@
         ${scheduleCard('Breakfast', h.breakfast_start, h.breakfast_end, meal === 'breakfast')}
         ${scheduleCard('Lunch', h.lunch_start, h.lunch_end, meal === 'lunch')}
         ${scheduleCard('Espresso Bar &amp; Bakery', h.espresso_open, h.espresso_close, espressoServing())}
-      </dl>
-      <div class="mt-3 flex gap-2 rounded-xl border-l-4 border-amber-400 bg-amber-50 p-3 text-sm text-amber-950">
-        ${icon('coffee', 'mt-0.5 shrink-0')}
-        <p><strong>Late Afternoon Service (${fmtTime(h.lunch_end)} – ${fmtTime(h.espresso_close)}):</strong>
-          ${esc(h.afternoon_notice)}</p>
-      </div>`;
+      </dl>`;
     updateStatusTime();
   }
 
@@ -392,13 +383,16 @@
       </span>
     </div>`;
 
+  const itemName = (item) =>
+    `${esc(item.name)}${item.bracket ? ` <span class="font-medium text-slate-600">(${esc(item.bracket)})</span>` : ''}`;
+
   function itemCard(item) {
     const sold = !item.available;
     return `
       <li class="relative rounded-xl border p-4 shadow-sm ${sold ? 'border-slate-300 bg-slate-100' : 'border-slate-200 bg-white'}">
         <div class="${sold ? 'opacity-50 grayscale' : ''}">
           <div class="flex items-start justify-between gap-3">
-            <h4 class="font-semibold leading-snug ${sold ? 'line-through decoration-2' : ''}">${esc(item.name)}</h4>
+            <h4 class="font-semibold leading-snug ${sold ? 'line-through decoration-2' : ''}">${itemName(item)}</h4>
             ${isNum(item.price) ? `<span class="whitespace-nowrap font-bold text-emerald-900">${fmtPrice(item.price)}</span>` : ''}
           </div>
           ${item.description ? `<p class="mt-1 text-sm text-slate-600">${esc(item.description)}</p>` : ''}
@@ -501,7 +495,7 @@
                  ${checked && !sold ? 'checked' : ''} ${sold ? 'disabled' : ''} />
           <span class="min-w-0 flex-1">
             <span class="flex items-start justify-between gap-2">
-              <span class="font-semibold leading-snug">${esc(item.name)}${sold ? '<span class="sr-only"> (sold out)</span>' : ''}</span>
+              <span class="font-semibold leading-snug">${itemName(item)}${sold ? '<span class="sr-only"> (sold out)</span>' : ''}</span>
               ${meta.length ? `<span class="whitespace-nowrap text-sm font-semibold text-slate-700">${esc(meta.join(' · '))}</span>` : ''}
             </span>
             ${item.description ? `<span class="mt-1 block text-sm text-slate-600">${esc(item.description)}</span>` : ''}
@@ -877,9 +871,6 @@
                 </div>
               </fieldset>`)
             .join('')}
-          <div class="mt-3">
-            ${field({ label: 'Late afternoon notice', scope: 'hours', fieldName: 'afternoon_notice', value: hours.afternoon_notice, type: 'textarea', hint: 'Updates automatically when you change the times above, unless you have written your own text.' })}
-          </div>
         </section>
 
         ${weightStations
@@ -954,6 +945,11 @@
     const item = state.menu.stations[s].sections[k].items[i];
     const base = `data-scope="item" data-s="${s}" data-k="${k}" data-i="${i}"`;
     const id = `m-${s}-${k}-${i}`;
+    // Items that use a bracket (e.g. weekly pizza flavor) show it in the main row for quick edits.
+    const hasBracket = typeof item.bracket === 'string';
+    const bracketInput = `
+      <label for="${id}-bracket" class="block text-xs font-semibold">Bracket text <span class="font-normal text-slate-500">(shown after the name, e.g. this week's flavor)</span></label>
+      <input id="${id}-bracket" type="text" ${base} data-field="bracket" data-type="text" value="${esc(item.bracket || '')}" placeholder="Leave blank for none" class="${inputCls}" />`;
     return `
       <li id="row-${id}" class="rounded-lg border p-3 ${item.available ? 'border-slate-200 bg-white' : 'border-red-300 bg-red-50'}">
         <div class="flex flex-wrap items-center gap-2">
@@ -970,9 +966,11 @@
                    value="${isNum(item.calories) ? esc(item.calories) : ''}" placeholder="—" aria-label="Calories"
                    class="w-20 rounded-lg border border-slate-300 px-2 py-2 text-sm" /></label>
         </div>
+        ${hasBracket ? `<div class="mt-2">${bracketInput}</div>` : ''}
         <details class="mt-2">
-          <summary class="cursor-pointer text-sm font-medium text-slate-600">Description, allergens, tags, delete</summary>
+          <summary class="cursor-pointer text-sm font-medium text-slate-600">${hasBracket ? 'Description' : 'Bracket, description'}, allergens, tags, delete</summary>
           <div class="mt-2 grid gap-2 sm:grid-cols-2">
+            ${hasBracket ? '' : `<div class="sm:col-span-2">${bracketInput}</div>`}
             <div class="sm:col-span-2">
               <label for="${id}-desc" class="block text-xs font-semibold">Description</label>
               <textarea id="${id}-desc" rows="2" ${base} data-field="description" data-type="text" class="${inputCls}">${esc(item.description)}</textarea>
@@ -1134,14 +1132,7 @@
     } else if (scope === 'settings') {
       menu.settings[fieldName] = value;
     } else if (scope === 'hours') {
-      const before = defaultAfternoonNotice(menu.hours);
       menu.hours[fieldName] = value;
-      if (['lunch_end', 'espresso_close'].includes(fieldName) && menu.hours.afternoon_notice === before) {
-        // Keep the auto-generated notice in sync with the times.
-        menu.hours.afternoon_notice = defaultAfternoonNotice(menu.hours);
-        const notice = $('[data-scope="hours"][data-field="afternoon_notice"]');
-        if (notice) notice.value = menu.hours.afternoon_notice;
-      }
     }
     markChanged();
   }
@@ -1294,6 +1285,10 @@
       st.sections.forEach((sec) =>
         sec.items.forEach((it) => {
           it.name = it.name.trim();
+          if (typeof it.bracket === 'string') {
+            it.bracket = it.bracket.trim();
+            if (!it.bracket) delete it.bracket;
+          }
           if (isNum(it.price)) it.price = Math.round(it.price * 100) / 100;
           if (isNum(it.calories)) it.calories = Math.round(it.calories);
         }),
