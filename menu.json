@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "last_updated": "2026-11-11T22:00:00.000Z",
+  "last_updated": "2026-11-12T00:00:00.000Z",
   "settings": {
     "cafeteria_name": "1965 Cafeteria",
     "admin_passcode_sha256": "7ec57cf4f49ac56e7dc7388b4ac0722dea721924522f6a20a255b3bbf8d3f00d",
@@ -10,12 +10,11 @@
   },
   "hours": {
     "breakfast_start": "08:00",
-    "breakfast_end": "10:30",
-    "lunch_start": "10:30",
-    "lunch_end": "14:30",
-    "espresso_open": "08:00",
-    "espresso_close": "16:00",
-    "afternoon_notice": "From 2:30 PM to 4:00 PM, main stations are closed; only the Espresso Bar is open, serving coffee and Bakery items."
+    "breakfast_end": "11:30",
+    "lunch_start": "11:30",
+    "lunch_end": "15:00",
+    "espresso_open": "14:00",
+    "espresso_close": "18:00"
   },
   "stations": [
     {
@@ -33,10 +32,47 @@
           "price_note": "",
           "builder": null,
           "items": [
-            { "id": "cheese-pizza", "name": "Cheese Pizza", "price": 6.59, "calories": 480, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "pepperoni-pizza", "name": "Pepperoni Pizza", "price": 6.99, "calories": 500, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "specialty-pizza", "name": "Specialty Pizza", "price": 7.49, "calories": 580, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "add-a-slice-side", "name": "Add a Slice / Add a Side", "price": 3.99, "calories": 250, "description": "", "allergens": [], "tags": [], "available": true }
+            {
+              "id": "cheese-pizza",
+              "name": "Cheese Pizza",
+              "price": 6.59,
+              "calories": 480,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "pepperoni-pizza",
+              "name": "Pepperoni Pizza",
+              "price": 6.99,
+              "calories": 500,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "specialty-pizza",
+              "name": "Specialty Pizza",
+              "bracket": "Flavor changes weekly",
+              "price": 7.49,
+              "calories": 580,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "add-a-slice",
+              "name": "Add a Slice",
+              "price": 3.99,
+              "calories": 250,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
           ]
         },
         {
@@ -45,8 +81,26 @@
           "price_note": "Sandwiches — $12.99",
           "builder": null,
           "items": [
-            { "id": "caprese-on-focaccia", "name": "Caprese on Focaccia", "price": 12.99, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "southwest-crispy-chicken-ciabatta", "name": "Southwest Crispy Chicken on Ciabatta", "price": 12.99, "calories": null, "description": "", "allergens": [], "tags": [], "available": true }
+            {
+              "id": "caprese-on-focaccia",
+              "name": "Caprese on Focaccia",
+              "price": 12.99,
+              "calories": 599,
+              "description": "Fresh mozzarella, pesto, heirloom tomatoes on focaccia.",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "southwest-crispy-chicken-ciabatta",
+              "name": "Southwest Crispy Chicken on Ciabatta",
+              "price": 12.99,
+              "calories": 635,
+              "description": "Crispy chicken, chipotle mayo, pepper-jack cheese, lettuce, tomato and onion on ciabatta.",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
           ]
         },
         {
@@ -55,7 +109,19 @@
           "price_note": "$12.99",
           "builder": null,
           "items": [
-            { "id": "roast-sirloin-ciabatta", "name": "Roast Sirloin Ciabatta", "price": 12.99, "calories": 703, "description": "Roast sirloin with roasted tomatoes, brie, and chimichurri, and garlic w/ spinach on Iggy's Ciabbata Rolls. Served w/ Kettle Chips.", "allergens": ["Contains Gluten", "Contains Dairy"], "tags": [], "available": true }
+            {
+              "id": "roast-sirloin-ciabatta",
+              "name": "Roast Sirloin Ciabatta",
+              "price": 12.99,
+              "calories": 703,
+              "description": "Roast sirloin with roasted tomatoes, brie, and chimichurri, and garlic w/ spinach on Iggy's Ciabbata Rolls. Served w/ Kettle Chips.",
+              "allergens": [
+                "Contains Gluten",
+                "Contains Dairy"
+              ],
+              "tags": [],
+              "available": true
+            }
           ]
         }
       ]
@@ -75,9 +141,36 @@
           "price_note": "$15.29 — Served w/ Two Sides",
           "builder": null,
           "items": [
-            { "id": "blackened-salmon", "name": "Blackened Salmon w/ Two Sides", "price": 15.29, "calories": 285, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "pan-seared-crab-cakes", "name": "Pan Seared Crab Cakes w/ Two Sides", "price": 15.29, "calories": 299, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "sauteed-mussels", "name": "Sauteed Mussels w/ Two Sides", "price": 15.29, "calories": 285, "description": "", "allergens": [], "tags": [], "available": true }
+            {
+              "id": "blackened-salmon",
+              "name": "Blackened Salmon w/ Two Sides",
+              "price": 15.29,
+              "calories": 285,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "pan-seared-crab-cakes",
+              "name": "Pan Seared Crab Cakes w/ Two Sides",
+              "price": 15.29,
+              "calories": 299,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "sauteed-mussels",
+              "name": "Sauteed Mussels w/ Two Sides",
+              "price": 15.29,
+              "calories": 285,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
           ]
         },
         {
@@ -86,8 +179,26 @@
           "price_note": "Included with your entree",
           "builder": null,
           "items": [
-            { "id": "cajun-remoulade", "name": "Cajun Remoulade", "price": null, "calories": 28, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "lemon-aioli", "name": "Lemon Aioli", "price": null, "calories": 30, "description": "", "allergens": [], "tags": [], "available": true }
+            {
+              "id": "cajun-remoulade",
+              "name": "Cajun Remoulade",
+              "price": null,
+              "calories": 28,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "lemon-aioli",
+              "name": "Lemon Aioli",
+              "price": null,
+              "calories": 30,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
           ]
         },
         {
@@ -96,9 +207,36 @@
           "price_note": "Choose two with your entree",
           "builder": null,
           "items": [
-            { "id": "garlicky-broccoli", "name": "Garlicky Broccoli", "price": null, "calories": 100, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "stuffed-baked-potato", "name": "Stuffed Baked Potato with Crème Fraîche", "price": null, "calories": 400, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "jasmine-rice", "name": "Jasmine Rice", "price": null, "calories": 180, "description": "", "allergens": [], "tags": [], "available": true }
+            {
+              "id": "garlicky-broccoli",
+              "name": "Garlicky Broccoli",
+              "price": null,
+              "calories": 100,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "stuffed-baked-potato",
+              "name": "Stuffed Baked Potato with Crème Fraîche",
+              "price": null,
+              "calories": 400,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "jasmine-rice",
+              "name": "Jasmine Rice",
+              "price": null,
+              "calories": 180,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
           ]
         }
       ]
@@ -122,74 +260,323 @@
           "id": "deli-bread",
           "title": "Bread Box",
           "price_note": "Pick one",
-          "builder": { "select": "single", "group": "bread" },
+          "builder": {
+            "select": "single",
+            "group": "bread"
+          },
           "items": [
-            { "id": "spinach-wrap", "name": "Spinach Wrap", "price": null, "calories": 90, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "white-wrap", "name": "White Wrap", "price": null, "calories": 70, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "tomato-wrap", "name": "Tomato Wrap", "price": null, "calories": 70, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "wheat-sliced", "name": "Wheat Sliced", "price": null, "calories": 80, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "white-sliced", "name": "White Sliced", "price": null, "calories": 80, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "deli-ciabatta", "name": "Ciabatta", "price": null, "calories": 90, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "multigrain", "name": "Multigrain", "price": null, "calories": 90, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "gluten-free-bread", "name": "Gluten Free Bread", "price": null, "calories": 60, "description": "", "allergens": [], "tags": ["Gluten-Free"], "available": true }
+            {
+              "id": "spinach-wrap",
+              "name": "Spinach Wrap",
+              "price": null,
+              "calories": 90,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "white-wrap",
+              "name": "White Wrap",
+              "price": null,
+              "calories": 70,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "tomato-wrap",
+              "name": "Tomato Wrap",
+              "price": null,
+              "calories": 70,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "wheat-sliced",
+              "name": "Wheat Sliced",
+              "price": null,
+              "calories": 80,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "white-sliced",
+              "name": "White Sliced",
+              "price": null,
+              "calories": 80,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "deli-ciabatta",
+              "name": "Ciabatta",
+              "price": null,
+              "calories": 90,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "multigrain",
+              "name": "Multigrain",
+              "price": null,
+              "calories": 90,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "gluten-free-bread",
+              "name": "Gluten Free Bread",
+              "price": null,
+              "calories": 60,
+              "description": "",
+              "allergens": [],
+              "tags": [
+                "Gluten-Free"
+              ],
+              "available": true
+            }
           ]
         },
         {
           "id": "deli-base",
           "title": "Base",
           "price_note": "Protein",
-          "builder": { "select": "multi" },
+          "builder": {
+            "select": "multi"
+          },
           "items": [
-            { "id": "turkey", "name": "Turkey", "price": null, "calories": 80, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "tuna-salad", "name": "Tuna Salad", "price": null, "calories": 180, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "roast-beef", "name": "Roast Beef", "price": null, "calories": 130, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "deli-grilled-chicken", "name": "Grilled Chicken", "price": null, "calories": 100, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "ham", "name": "Ham", "price": null, "calories": 140, "description": "", "allergens": [], "tags": [], "available": true }
+            {
+              "id": "turkey",
+              "name": "Turkey",
+              "price": null,
+              "calories": 80,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "tuna-salad",
+              "name": "Tuna Salad",
+              "price": null,
+              "calories": 180,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "roast-beef",
+              "name": "Roast Beef",
+              "price": null,
+              "calories": 130,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "deli-grilled-chicken",
+              "name": "Grilled Chicken",
+              "price": null,
+              "calories": 100,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "ham",
+              "name": "Ham",
+              "price": null,
+              "calories": 140,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
           ]
         },
         {
           "id": "deli-cheese",
           "title": "Cheese",
           "price_note": "",
-          "builder": { "select": "multi" },
+          "builder": {
+            "select": "multi"
+          },
           "items": [
-            { "id": "mozzarella", "name": "Mozzarella", "price": null, "calories": 280, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "swiss", "name": "Swiss", "price": null, "calories": 108, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "cheddar", "name": "Cheddar", "price": null, "calories": 115, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "pepperjack", "name": "Pepperjack", "price": null, "calories": 110, "description": "", "allergens": [], "tags": [], "available": true }
+            {
+              "id": "mozzarella",
+              "name": "Mozzarella",
+              "price": null,
+              "calories": 280,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "swiss",
+              "name": "Swiss",
+              "price": null,
+              "calories": 108,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "cheddar",
+              "name": "Cheddar",
+              "price": null,
+              "calories": 115,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "pepperjack",
+              "name": "Pepperjack",
+              "price": null,
+              "calories": 110,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
           ]
         },
         {
           "id": "deli-toppings",
           "title": "Toppings",
           "price_note": "",
-          "builder": { "select": "multi" },
+          "builder": {
+            "select": "multi"
+          },
           "items": [
-            { "id": "deli-lettuce", "name": "Lettuce", "price": null, "calories": 15, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "heirloom-tomatoes", "name": "Heirloom Tomatoes", "price": null, "calories": 20, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "red-onions", "name": "Red Onions", "price": null, "calories": 20, "description": "", "allergens": [], "tags": [], "available": true }
+            {
+              "id": "deli-lettuce",
+              "name": "Lettuce",
+              "price": null,
+              "calories": 15,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "heirloom-tomatoes",
+              "name": "Heirloom Tomatoes",
+              "price": null,
+              "calories": 20,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "red-onions",
+              "name": "Red Onions",
+              "price": null,
+              "calories": 20,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
           ]
         },
         {
           "id": "deli-condiments",
           "title": "Condiments",
           "price_note": "",
-          "builder": { "select": "multi" },
+          "builder": {
+            "select": "multi"
+          },
           "items": [
-            { "id": "deli-mayo", "name": "Mayo", "price": null, "calories": 45, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "deli-chipotle-mayo", "name": "Chipotle Mayo", "price": null, "calories": 65, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "yellow-mustard", "name": "Yellow Mustard", "price": null, "calories": 45, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "deli-buffalo", "name": "Buffalo", "price": null, "calories": 70, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "deli-ranch", "name": "Ranch", "price": null, "calories": 80, "description": "", "allergens": [], "tags": [], "available": true }
+            {
+              "id": "deli-mayo",
+              "name": "Mayo",
+              "price": null,
+              "calories": 45,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "deli-chipotle-mayo",
+              "name": "Chipotle Mayo",
+              "price": null,
+              "calories": 65,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "yellow-mustard",
+              "name": "Yellow Mustard",
+              "price": null,
+              "calories": 45,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "deli-buffalo",
+              "name": "Buffalo",
+              "price": null,
+              "calories": 70,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "deli-ranch",
+              "name": "Ranch",
+              "price": null,
+              "calories": 80,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
           ]
         },
         {
           "id": "deli-sides",
           "title": "Sides",
           "price_note": "",
-          "builder": { "select": "multi" },
+          "builder": {
+            "select": "multi"
+          },
           "items": [
-            { "id": "deli-kettle-chips", "name": "Kettle Chips", "price": null, "calories": 189, "description": "", "allergens": [], "tags": [], "available": true }
+            {
+              "id": "deli-kettle-chips",
+              "name": "Kettle Chips",
+              "price": null,
+              "calories": 189,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
           ]
         }
       ]
@@ -210,56 +597,306 @@
           "id": "broad-specialty",
           "title": "Specialty Entree",
           "price_note": "$15.29",
-          "builder": { "select": "single", "group": "entree" },
+          "builder": {
+            "select": "single",
+            "group": "entree"
+          },
           "items": [
-            { "id": "fish-and-chips", "name": "Fish & Chips", "price": 15.29, "calories": 680, "description": "Crispy fried cod served w/ French fries, cole slaw, tartar sauce and lemon wedge.", "allergens": [], "tags": [], "available": true }
+            {
+              "id": "fish-and-chips",
+              "name": "Fish & Chips",
+              "price": 15.29,
+              "calories": 680,
+              "description": "Crispy fried cod served w/ French fries, cole slaw, tartar sauce and lemon wedge.",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
           ]
         },
         {
           "id": "broad-grill-entrees",
           "title": "Standard Grill Entrees",
-          "price_note": "All $12.99",
-          "builder": { "select": "single", "group": "entree" },
+          "price_note": "",
+          "builder": {
+            "select": "single",
+            "group": "entree"
+          },
           "items": [
-            { "id": "lingo-burger", "name": "Lingo Burger", "price": 12.99, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "impossible-burger", "name": "Impossible Burger", "price": 12.99, "calories": null, "description": "", "allergens": [], "tags": ["Vegetarian"], "available": true },
-            { "id": "veggie-burger", "name": "Veggie Burger", "price": 12.99, "calories": null, "description": "", "allergens": [], "tags": ["Vegetarian"], "available": true },
-            { "id": "grilled-chicken-sandwich", "name": "Grilled Chicken Sandwich", "price": 12.99, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "chicken-tenders", "name": "Chicken Tenders", "price": 12.99, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "halal-chicken", "name": "Halal Chicken", "price": 12.99, "calories": null, "description": "", "allergens": [], "tags": ["100% Halal Certified"], "available": true },
-            { "id": "halal-pepperoni", "name": "Halal Pepperoni", "price": 12.99, "calories": null, "description": "", "allergens": [], "tags": ["100% Halal Certified"], "available": true },
-            { "id": "halal-burger", "name": "Halal Burger", "price": 12.99, "calories": null, "description": "", "allergens": [], "tags": ["100% Halal Certified"], "available": true }
-          ]
-        },
-        {
-          "id": "broad-sides",
-          "title": "Sides",
-          "price_note": "All $2.99",
-          "builder": { "select": "multi" },
-          "items": [
-            { "id": "regular-french-fries", "name": "Regular French Fries", "price": 2.99, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "sweet-potato-fries", "name": "Sweet Potato Fries", "price": 2.99, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "tater-tots", "name": "Tater Tots", "price": 2.99, "calories": null, "description": "", "allergens": [], "tags": [], "available": true }
+            {
+              "id": "lingo-burger",
+              "name": "Lingo Burger",
+              "price": 11.25,
+              "calories": 630,
+              "description": "Beef burger, caramelized onion, lettuce, tomato and lingo sauce.",
+              "allergens": [],
+              "tags": [
+                "100% Halal Certified"
+              ],
+              "available": true
+            },
+            {
+              "id": "impossible-burger",
+              "name": "Impossible Burger",
+              "price": 11.25,
+              "calories": 600,
+              "description": "",
+              "allergens": [],
+              "tags": [
+                "Vegetarian"
+              ],
+              "available": true
+            },
+            {
+              "id": "veggie-burger",
+              "name": "Veggie Burger",
+              "price": 11.35,
+              "calories": null,
+              "description": "",
+              "allergens": [],
+              "tags": [
+                "Vegetarian"
+              ],
+              "available": true
+            },
+            {
+              "id": "grilled-chicken-sandwich",
+              "name": "Grilled Chicken Sandwich",
+              "price": 11.25,
+              "calories": 500,
+              "description": "",
+              "allergens": [],
+              "tags": [
+                "100% Halal Certified"
+              ],
+              "available": true
+            },
+            {
+              "id": "chicken-tenders",
+              "name": "Chicken Tenders",
+              "price": 10.99,
+              "calories": 650,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "halal-chicken",
+              "name": "Halal Chicken",
+              "price": 12.99,
+              "calories": null,
+              "description": "",
+              "allergens": [],
+              "tags": [
+                "100% Halal Certified"
+              ],
+              "available": true
+            },
+            {
+              "id": "halal-pepperoni",
+              "name": "Halal Pepperoni",
+              "price": 12.99,
+              "calories": null,
+              "description": "",
+              "allergens": [],
+              "tags": [
+                "100% Halal Certified"
+              ],
+              "available": true
+            },
+            {
+              "id": "halal-burger",
+              "name": "Halal Burger",
+              "price": 12.99,
+              "calories": null,
+              "description": "",
+              "allergens": [],
+              "tags": [
+                "100% Halal Certified"
+              ],
+              "available": true
+            }
           ]
         },
         {
           "id": "broad-toppings-sauces",
           "title": "Toppings & Sauces",
           "price_note": "Included",
-          "builder": { "select": "multi" },
+          "builder": {
+            "select": "multi"
+          },
           "items": [
-            { "id": "broad-lettuce", "name": "Lettuce", "price": null, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "broad-onions", "name": "Onions", "price": null, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "broad-tomato", "name": "Tomato", "price": null, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "broad-pickles", "name": "Pickles", "price": null, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "broad-mayo", "name": "Mayo", "price": null, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "broad-buffalo-sauce", "name": "Buffalo Sauce", "price": null, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "broad-chipotle-mayo", "name": "Chipotle Mayo", "price": null, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "broad-honey-mustard", "name": "Honey Mustard", "price": null, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "broad-ranch", "name": "Ranch", "price": null, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "broad-bbq-sauce", "name": "BBQ Sauce", "price": null, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "broad-mayonnaise", "name": "Mayonnaise", "price": null, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "broad-lingo-sauce", "name": "Lingo Sauce", "price": null, "calories": null, "description": "", "allergens": [], "tags": [], "available": true }
+            {
+              "id": "broad-lettuce",
+              "name": "Lettuce",
+              "price": null,
+              "calories": 15,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "broad-onions",
+              "name": "Onions",
+              "price": null,
+              "calories": 22,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "broad-tomato",
+              "name": "Tomato",
+              "price": null,
+              "calories": 22,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "broad-pickles",
+              "name": "Pickles",
+              "price": null,
+              "calories": 16,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "broad-pickled-onions",
+              "name": "Pickled Onions",
+              "price": null,
+              "calories": 25,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "broad-mayo",
+              "name": "Mayo",
+              "price": null,
+              "calories": 45,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "broad-buffalo-sauce",
+              "name": "Buffalo Sauce",
+              "price": null,
+              "calories": 45,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "broad-chipotle-mayo",
+              "name": "Chipotle Mayo",
+              "price": null,
+              "calories": 66,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "broad-honey-mustard",
+              "name": "Honey Mustard",
+              "price": null,
+              "calories": 55,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "broad-ranch",
+              "name": "Ranch",
+              "price": null,
+              "calories": 66,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "broad-bbq-sauce",
+              "name": "BBQ Sauce",
+              "price": null,
+              "calories": 56,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "broad-mayonnaise",
+              "name": "Mayonnaise",
+              "price": null,
+              "calories": 66,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "broad-lingo-sauce",
+              "name": "Lingo Sauce",
+              "price": null,
+              "calories": 66,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
+          ]
+        },
+        {
+          "id": "broad-sides",
+          "title": "Sides",
+          "price_note": "All $2.99",
+          "builder": {
+            "select": "multi"
+          },
+          "items": [
+            {
+              "id": "regular-french-fries",
+              "name": "Regular French Fries",
+              "price": 2.99,
+              "calories": 400,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "sweet-potato-fries",
+              "name": "Sweet Potato Fries",
+              "price": 2.99,
+              "calories": 389,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "tater-tots",
+              "name": "Tater Tots",
+              "price": 2.99,
+              "calories": 400,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
           ]
         }
       ]
@@ -267,10 +904,10 @@
     {
       "id": "bakery-espresso-bar",
       "name": "Bakery & Espresso Bar",
-      "tagline": "Served until 4:00 PM",
+      "tagline": "Served 2:00 PM – 6:00 PM",
       "icon": "croissant",
       "hours_group": "espresso",
-      "note": "Open until 4:00 PM daily. From 2:30 PM to 4:00 PM, only the Espresso Bar and Bakery items are available.",
+      "note": "Open 2:00 PM – 6:00 PM daily. After lunch ends at 3:00 PM, only the Espresso Bar and Bakery items are available.",
       "builder": null,
       "sections": [
         {
@@ -279,13 +916,76 @@
           "price_note": "All $3.00",
           "builder": null,
           "items": [
-            { "id": "almond-croissant", "name": "Almond Croissant", "price": 3.00, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "chocolate-croissant", "name": "Chocolate Croissant", "price": 3.00, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "regular-croissant", "name": "Regular Croissant", "price": 3.00, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "danish", "name": "Danish", "price": 3.00, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "lemon-poppy-muffin", "name": "Lemon Poppy Muffin", "price": 3.00, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "chocolate-espresso-muffin", "name": "Chocolate Espresso Muffin", "price": 3.00, "calories": null, "description": "", "allergens": [], "tags": [], "available": true },
-            { "id": "regular-muffin", "name": "Regular Muffin", "price": 3.00, "calories": null, "description": "", "allergens": [], "tags": [], "available": true }
+            {
+              "id": "almond-croissant",
+              "name": "Almond Croissant",
+              "price": 3.0,
+              "calories": null,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "chocolate-croissant",
+              "name": "Chocolate Croissant",
+              "price": 3.0,
+              "calories": null,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "regular-croissant",
+              "name": "Regular Croissant",
+              "price": 3.0,
+              "calories": null,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "danish",
+              "name": "Danish",
+              "price": 3.0,
+              "calories": null,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "lemon-poppy-muffin",
+              "name": "Lemon Poppy Muffin",
+              "price": 3.0,
+              "calories": null,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "chocolate-espresso-muffin",
+              "name": "Chocolate Espresso Muffin",
+              "price": 3.0,
+              "calories": null,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "regular-muffin",
+              "name": "Regular Muffin",
+              "price": 3.0,
+              "calories": null,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
           ]
         }
       ]
