@@ -4,13 +4,17 @@
   "settings": {
     "cafeteria_name": "1965 Cafeteria",
     "admin_passcode_sha256": "7ec57cf4f49ac56e7dc7388b4ac0722dea721924522f6a20a255b3bbf8d3f00d",
-    "nutrition_advisory": "2,000 calories a day is used for general nutrition advice, but calorie needs vary. Additional nutritional and allergy information available upon request."
+    "nutrition_advisory": "2,000 calories a day is used for general nutrition advice, but calorie needs vary. Additional nutritional and allergy information available upon request.",
+    "sales_tax_percent": 6.25,
+    "sales_tax_label": "MA sales tax"
   },
   "hours": {
-    "open": "08:00",
-    "main_close": "14:30",
+    "breakfast_start": "08:00",
+    "breakfast_end": "10:30",
+    "lunch_start": "10:30",
+    "lunch_end": "14:30",
+    "espresso_open": "08:00",
     "espresso_close": "16:00",
-    "main_label": "Breakfast & Lunch",
     "afternoon_notice": "From 2:30 PM to 4:00 PM, main stations are closed; only the Espresso Bar is open, serving coffee and Bakery items."
   },
   "stations": [

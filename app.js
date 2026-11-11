@@ -113,7 +113,7 @@
   const serializeMenu = (menu) => `${JSON.stringify(menu, null, 2)}\n`;
 
   function defaultAfternoonNotice(hours) {
-    return `From ${fmtTime(hours.main_close)} to ${fmtTime(hours.espresso_close)}, main stations are closed; only the Espresso Bar is open, serving coffee and Bakery items.`;
+    return `From ${fmtTime(hours.lunch_end)} to ${fmtTime(hours.espresso_close)}, main stations are closed; only the Espresso Bar is open, serving coffee and Bakery items.`;
   }
 
   // ---------------------------------------------------------------------------
@@ -135,12 +135,37 @@
   function normalizeMenu(raw) {
     const menu = raw && typeof raw === 'object' ? raw : {};
     menu.settings = Object.assign(
-      { cafeteria_name: 'Cafeteria', admin_passcode_sha256: '', nutrition_advisory: '' },
+      {
+        cafeteria_name: 'Cafeteria',
+        admin_passcode_sha256: '',
+        nutrition_advisory: '',
+        sales_tax_percent: 6.25,
+        sales_tax_label: 'MA sales tax',
+      },
       menu.settings,
     );
+    if (!isNum(menu.settings.sales_tax_percent)) menu.settings.sales_tax_percent = 0;
+
+    // Older menu.json files used one combined "open → main_close" window.
+    const hours = menu.hours && typeof menu.hours === 'object' ? menu.hours : {};
+    if (!hours.breakfast_start && hours.open) {
+      hours.breakfast_start = hours.open;
+      hours.espresso_open = hours.open;
+      hours.lunch_end = hours.main_close;
+    }
+    delete hours.open;
+    delete hours.main_close;
+    delete hours.main_label;
     menu.hours = Object.assign(
-      { open: '08:00', main_close: '14:30', espresso_close: '16:00', main_label: 'Breakfast & Lunch' },
-      menu.hours,
+      {
+        breakfast_start: '08:00',
+        breakfast_end: '10:30',
+        lunch_start: '10:30',
+        lunch_end: '14:30',
+        espresso_open: '08:00',
+        espresso_close: '16:00',
+      },
+      hours,
     );
     if (typeof menu.hours.afternoon_notice !== 'string') {
       menu.hours.afternoon_notice = defaultAfternoonNotice(menu.hours);
@@ -189,28 +214,51 @@
   // ---------------------------------------------------------------------------
   // Time-of-day status
   // ---------------------------------------------------------------------------
+  const nowMinutes = (now = new Date()) => now.getHours() * 60 + now.getMinutes();
+  const inWindow = (minutes, start, end) => minutes >= toMinutes(start) && minutes < toMinutes(end);
+
+  // Main stations run from the start of breakfast to the end of lunch.
+  const mainServing = (m = nowMinutes()) => inWindow(m, state.menu.hours.breakfast_start, state.menu.hours.lunch_end);
+  const espressoServing = (m = nowMinutes()) => inWindow(m, state.menu.hours.espresso_open, state.menu.hours.espresso_close);
+
   function getStatus(now = new Date()) {
-    const h = state.menu.hours;
-    const minutes = now.getHours() * 60 + now.getMinutes();
-    const open = toMinutes(h.open);
-    const mainClose = toMinutes(h.main_close);
-    const espressoClose = toMinutes(h.espresso_close);
-    if (minutes >= open && minutes < mainClose) return 'open';
-    if (minutes >= mainClose && minutes < espressoClose) return 'afternoon';
+    const m = nowMinutes(now);
+    if (mainServing(m)) return 'open';
+    if (m >= toMinutes(state.menu.hours.lunch_end) && espressoServing(m)) return 'afternoon';
     return 'closed';
   }
 
-  function isStationServing(station, status) {
-    if (status === 'open') return true;
-    if (status === 'afternoon') return station.hours_group === 'espresso';
-    return false;
+  function currentMeal(m = nowMinutes()) {
+    const h = state.menu.hours;
+    if (inWindow(m, h.breakfast_start, h.breakfast_end)) return 'breakfast';
+    if (inWindow(m, h.lunch_start, h.lunch_end)) return 'lunch';
+    return null;
+  }
+
+  function isStationServing(station) {
+    return station.hours_group === 'espresso' ? espressoServing() : mainServing();
+  }
+
+  // Changes whenever anything time-dependent on the page should re-render.
+  const timeKey = () => `${getStatus()}|${currentMeal()}|${espressoServing()}`;
+
+  function scheduleCard(label, start, end, isNow) {
+    return `
+      <div class="rounded-xl p-3 ${isNow ? 'bg-white/20 ring-2 ring-emerald-300' : 'bg-white/10'}">
+        <dt class="flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-200">
+          ${label}
+          ${isNow ? '<span class="rounded-full bg-emerald-300 px-2 py-0.5 text-[0.65rem] font-bold text-emerald-950">Now</span>' : ''}
+        </dt>
+        <dd class="mt-0.5 font-semibold">${fmtTime(start)} – ${fmtTime(end)}</dd>
+      </div>`;
   }
 
   function renderStatusBanner() {
     const h = state.menu.hours;
     const status = getStatus();
     const s = STATUS[status];
-    state.lastStatus = status;
+    const meal = currentMeal();
+    state.lastStatus = timeKey();
     $('#status-banner').innerHTML = `
       <h2 id="hours-heading" class="sr-only">Operating hours and live status</h2>
       <div class="flex flex-wrap items-center gap-3">
@@ -220,19 +268,14 @@
         </span>
         <span id="status-time" class="text-sm text-emerald-100"></span>
       </div>
-      <dl class="mt-4 grid gap-3 sm:grid-cols-2">
-        <div class="rounded-xl bg-white/10 p-3">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-emerald-200">Main Cafeteria Stations</dt>
-          <dd class="mt-0.5 font-semibold">${esc(h.main_label)}: ${fmtTime(h.open)} – ${fmtTime(h.main_close)}</dd>
-        </div>
-        <div class="rounded-xl bg-white/10 p-3">
-          <dt class="text-xs font-semibold uppercase tracking-wide text-emerald-200">Bakery &amp; Espresso Bar</dt>
-          <dd class="mt-0.5 font-semibold">${fmtTime(h.open)} – ${fmtTime(h.espresso_close)}</dd>
-        </div>
+      <dl class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        ${scheduleCard('Breakfast', h.breakfast_start, h.breakfast_end, meal === 'breakfast')}
+        ${scheduleCard('Lunch', h.lunch_start, h.lunch_end, meal === 'lunch')}
+        ${scheduleCard('Espresso Bar &amp; Bakery', h.espresso_open, h.espresso_close, espressoServing())}
       </dl>
       <div class="mt-3 flex gap-2 rounded-xl border-l-4 border-amber-400 bg-amber-50 p-3 text-sm text-amber-950">
         ${icon('coffee', 'mt-0.5 shrink-0')}
-        <p><strong>Late Afternoon Service (${fmtTime(h.main_close)} – ${fmtTime(h.espresso_close)}):</strong>
+        <p><strong>Late Afternoon Service (${fmtTime(h.lunch_end)} – ${fmtTime(h.espresso_close)}):</strong>
           ${esc(h.afternoon_notice)}</p>
       </div>`;
     updateStatusTime();
@@ -248,7 +291,7 @@
 
   function tick() {
     if (!state.menu) return;
-    if (getStatus() !== state.lastStatus) {
+    if (timeKey() !== state.lastStatus) {
       // Status changed (e.g. 2:30 PM passed): refresh banner + "serving now" pills.
       renderStatusBanner();
       renderView();
@@ -474,31 +517,63 @@
   function builderTotals(station) {
     const picked = getSelectedItems(station);
     const calories = picked.reduce((sum, i) => sum + (isNum(i.calories) ? i.calories : 0), 0);
-    const price = picked.reduce((sum, i) => sum + (isNum(i.price) ? i.price : 0), 0);
     const missingCalories = picked.some((i) => !isNum(i.calories));
     const noCaloriesKnown = picked.length > 0 && picked.every((i) => !isNum(i.calories));
-    const calorieText = noCaloriesKnown ? 'Calories not listed*' : `${calories} Cal${missingCalories ? '*' : ''}`;
-    const showPrice = Boolean(station.builder.show_price);
+    const calorieText = noCaloriesKnown ? 'Not listed*' : `${calories} Cal${missingCalories ? '*' : ''}`;
+    const label = (text) => `<p class="text-xs font-semibold uppercase tracking-wide text-slate-500">${text}</p>`;
+
+    let priceBlock;
+    if (station.pricing_model === 'by_weight') {
+      const rate = isNum(station.price_per_lb) ? `${fmtPrice(station.price_per_lb)}/lb` : 'Weighed';
+      priceBlock = `
+        ${label('Est. cart price')}
+        <p class="text-2xl font-extrabold text-slate-900">By weight</p>
+        <p class="text-xs text-slate-600">${esc(rate)} at the register${taxRate() > 0 ? ` + ${esc(taxText())}` : ''}</p>`;
+    } else {
+      const { subtotal, tax, total } = cartPrice(picked);
+      priceBlock = `
+        ${label('Est. cart price')}
+        <p class="text-2xl font-extrabold text-slate-900">${fmtPrice(total)}</p>
+        <p class="text-xs text-slate-600">${taxRate() > 0
+          ? `${fmtPrice(subtotal)} + ${fmtPrice(tax)} ${esc(taxText())}`
+          : 'No sales tax added'}</p>`;
+    }
+
     return `
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div aria-live="polite" aria-atomic="true">
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Your total</p>
+      <div class="grid grid-cols-2 gap-4" aria-live="polite" aria-atomic="true">
+        <div>
+          ${label('Calories')}
           <p class="text-2xl font-extrabold text-emerald-900">${calorieText}</p>
-          ${showPrice ? `<p class="font-semibold text-slate-800">Estimated price: ${fmtPrice(price)}</p>` : ''}
         </div>
+        <div class="border-l border-slate-200 pl-4">${priceBlock}</div>
+      </div>
+      <div class="mt-2 flex items-start justify-between gap-3">
+        <p class="min-w-0 text-sm text-slate-600">${picked.length ? esc(picked.map((i) => i.name).join(', ')) : 'Nothing selected yet.'}</p>
         <button type="button" data-reset-builder="${esc(station.id)}"
-                class="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50">
+                class="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold hover:bg-slate-50">
           ${icon('rotate-ccw')} Reset
         </button>
       </div>
-      <p class="mt-1 text-sm text-slate-600">${picked.length ? esc(picked.map((i) => i.name).join(', ')) : 'Nothing selected yet.'}</p>
       ${missingCalories ? '<p class="mt-1 text-xs text-slate-500">* Some selected items do not list calories. Ask staff for full nutrition details.</p>' : ''}
-      ${station.pricing_model === 'by_weight' ? '<p class="mt-1 text-xs text-slate-500">Final price is by weight at the register.</p>' : ''}`;
+      <p class="mt-1 text-xs text-slate-500">Estimate only. The register total is final.</p>`;
+  }
+
+  // ---- Sales tax (rate is editable in the Kitchen Manager dashboard) ----
+  const taxRate = () => (isNum(state.menu.settings.sales_tax_percent) ? state.menu.settings.sales_tax_percent : 0);
+  const taxText = () => `${state.menu.settings.sales_tax_label || 'sales tax'} (${taxRate()}%)`;
+
+  function cartPrice(items) {
+    // Work in whole cents to avoid floating-point rounding errors.
+    const subtotalCents = items.reduce((sum, i) => sum + (isNum(i.price) ? Math.round(i.price * 100) : 0), 0);
+    const taxCents = Math.round((subtotalCents * taxRate()) / 100);
+    return { subtotal: subtotalCents / 100, tax: taxCents / 100, total: (subtotalCents + taxCents) / 100 };
   }
 
   function builderPanel(station) {
     const headingId = `builder-${station.id}`;
-    const what = station.builder.show_price ? 'calories and estimated price' : 'calories';
+    const what = station.pricing_model === 'by_weight'
+      ? 'calories'
+      : `calories and estimated cart price${taxRate() > 0 ? `, including ${taxRate()}% ${state.menu.settings.sales_tax_label || 'sales tax'}` : ''}`;
     return `
       <section aria-labelledby="${esc(headingId)}" class="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 p-4">
@@ -787,12 +862,21 @@
       <div class="space-y-4">
         <section class="${cardCls}" aria-labelledby="m-hours">
           <h3 id="m-hours" class="flex items-center gap-2 text-base font-bold">${icon('clock')} Cafeteria Operating Hours</h3>
-          <div class="mt-3 grid gap-3 sm:grid-cols-2">
-            ${field({ label: 'Cafeteria opens', scope: 'hours', fieldName: 'open', value: hours.open, type: 'time' })}
-            ${field({ label: 'Main stations close', scope: 'hours', fieldName: 'main_close', value: hours.main_close, type: 'time' })}
-            ${field({ label: 'Espresso Bar & Bakery close', scope: 'hours', fieldName: 'espresso_close', value: hours.espresso_close, type: 'time' })}
-            ${field({ label: 'Main service label', scope: 'hours', fieldName: 'main_label', value: hours.main_label })}
-          </div>
+          <p class="mt-1 text-xs text-slate-500">Main stations show as open from the start of breakfast to the end of lunch.</p>
+          ${[
+            ['Breakfast', 'breakfast_start', 'breakfast_end'],
+            ['Lunch', 'lunch_start', 'lunch_end'],
+            ['Espresso Bar & Bakery', 'espresso_open', 'espresso_close'],
+          ]
+            .map(([name, start, end]) => `
+              <fieldset class="mt-3">
+                <legend class="text-sm font-bold">${esc(name)}</legend>
+                <div class="grid grid-cols-2 gap-3">
+                  ${field({ label: 'Starts', scope: 'hours', fieldName: start, value: hours[start], type: 'time' })}
+                  ${field({ label: 'Ends', scope: 'hours', fieldName: end, value: hours[end], type: 'time' })}
+                </div>
+              </fieldset>`)
+            .join('')}
           <div class="mt-3">
             ${field({ label: 'Late afternoon notice', scope: 'hours', fieldName: 'afternoon_notice', value: hours.afternoon_notice, type: 'textarea', hint: 'Updates automatically when you change the times above, unless you have written your own text.' })}
           </div>
@@ -814,6 +898,14 @@
           <div class="mt-3 grid gap-3">
             ${field({ label: 'Cafeteria name', scope: 'settings', fieldName: 'cafeteria_name', value: settings.cafeteria_name })}
             ${field({ label: 'Nutrition & allergy advisory (footer)', scope: 'settings', fieldName: 'nutrition_advisory', value: settings.nutrition_advisory, type: 'textarea' })}
+          </div>
+        </section>
+
+        <section class="${cardCls}" aria-labelledby="m-tax">
+          <h3 id="m-tax" class="flex items-center gap-2 text-base font-bold">${icon('receipt')} Sales Tax (calculator estimates)</h3>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2">
+            ${field({ label: 'Tax rate (%)', scope: 'settings', fieldName: 'sales_tax_percent', value: settings.sales_tax_percent, type: 'number', attrs: 'step="0.01" min="0" max="100" inputmode="decimal"', hint: 'Massachusetts meals tax is 6.25%, or 7% in towns with the 0.75% local meals tax. Enter 0 if your cafeteria does not charge tax (for example, student meals at a school are often exempt).' })}
+            ${field({ label: 'Tax label', scope: 'settings', fieldName: 'sales_tax_label', value: settings.sales_tax_label })}
           </div>
         </section>
 
@@ -1044,7 +1136,7 @@
     } else if (scope === 'hours') {
       const before = defaultAfternoonNotice(menu.hours);
       menu.hours[fieldName] = value;
-      if (['main_close', 'espresso_close'].includes(fieldName) && menu.hours.afternoon_notice === before) {
+      if (['lunch_end', 'espresso_close'].includes(fieldName) && menu.hours.afternoon_notice === before) {
         // Keep the auto-generated notice in sync with the times.
         menu.hours.afternoon_notice = defaultAfternoonNotice(menu.hours);
         const notice = $('[data-scope="hours"][data-field="afternoon_notice"]');
@@ -1164,14 +1256,21 @@
   function validateMenu(menu) {
     const errors = [];
     const h = menu.hours;
-    const open = toMinutes(h.open);
-    const mainClose = toMinutes(h.main_close);
-    const espressoClose = toMinutes(h.espresso_close);
-    if ([open, mainClose, espressoClose].some(Number.isNaN)) {
-      errors.push('All three operating-hour times are required.');
-    } else if (!(open < mainClose && mainClose <= espressoClose)) {
-      errors.push('Hours must be in order: opening time, then main stations close, then Espresso Bar close.');
+    const t = Object.fromEntries(
+      ['breakfast_start', 'breakfast_end', 'lunch_start', 'lunch_end', 'espresso_open', 'espresso_close']
+        .map((k) => [k, toMinutes(h[k])]),
+    );
+    if (Object.values(t).some(Number.isNaN)) {
+      errors.push('Every start and end time (Breakfast, Lunch, Espresso Bar) is required.');
+    } else {
+      if (!(t.breakfast_start < t.breakfast_end)) errors.push('Breakfast must end after it starts.');
+      if (!(t.lunch_start < t.lunch_end)) errors.push('Lunch must end after it starts.');
+      if (!(t.espresso_open < t.espresso_close)) errors.push('The Espresso Bar must close after it opens.');
+      if (t.breakfast_end > t.lunch_start) errors.push('Breakfast must end before (or when) lunch starts.');
+      if (t.lunch_end > t.espresso_close) errors.push('The Espresso Bar must close at or after the end of lunch.');
     }
+    const tax = menu.settings.sales_tax_percent;
+    if (tax != null && !(tax >= 0 && tax <= 100)) errors.push('Sales tax rate must be between 0 and 100%.');
     menu.stations.forEach((st) => {
       if (st.price_per_lb != null && !(st.price_per_lb >= 0)) errors.push(`${st.name}: rate per lb must be 0 or more.`);
       st.sections.forEach((sec) => {
