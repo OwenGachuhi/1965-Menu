@@ -80,7 +80,7 @@ To publish changes, the editor needs a **GitHub Personal Access Token**. Think o
    - Change an item's **name**, **price ($)**, or **calories (Cal)** right in the row.
    - Tap **Description, allergens, tags, delete** under an item to edit the description, allergen badges (for example `Contains Gluten, Contains Dairy`), tags (for example `Vegetarian`, `Gluten-Free`, `100% Halal Certified`), or delete the item.
    - Tap **Add item to …** to add a daily special, or **Add new section** for a new heading like "Daily Specials".
-   - Open **Hours & Settings** to change **Cafeteria Operating Hours**, the **Deli Hult rate per lb**, the cafeteria name, or the passcode.
+   - Open **Hours & Settings** to change the **Breakfast**, **Lunch**, and **Espresso Bar & Bakery** start/end times, the **Deli Hult rate per lb**, the **sales tax rate** used by the calculators, the cafeteria name, or the passcode.
 5. When you are done, tap **Publish Live to GitHub**.
 6. You will see **"Published!"**. Students see the update after GitHub Pages refreshes, usually within 1–2 minutes. They may need to refresh the page.
 
@@ -104,19 +104,23 @@ The passcode is stored in `menu.json` as a SHA-256 hash (`settings.admin_passcod
 
 ## How it works (for the curious)
 
+- **Schedule:** the banner at the top shows three separate times: **Breakfast** (default 8:00 – 10:30 AM), **Lunch** (default 10:30 AM – 2:30 PM), and **Espresso Bar & Bakery** (default 8:00 AM – 4:00 PM). The one being served right now is marked **Now**.
 - **Live status badge:** `app.js` compares the visitor's local time with `hours` in `menu.json` and rechecks every 30 seconds:
-  - 8:00 AM – 2:30 PM → green **Open Now • Full Cafeteria Menu Available**
-  - 2:30 PM – 4:00 PM → amber **Afternoon Hours • Espresso Bar & Baked Goods Only**
-  - Before 8:00 AM or after 4:00 PM → red **Cafeteria Currently Closed • Viewing Menu**
+  - Start of breakfast to end of lunch (8:00 AM – 2:30 PM) → green **Open Now • Full Cafeteria Menu Available**
+  - End of lunch to Espresso Bar close (2:30 PM – 4:00 PM) → amber **Afternoon Hours • Espresso Bar & Baked Goods Only**
+  - Any other time → red **Cafeteria Currently Closed • Viewing Menu**
 - **Sold Out:** items with `"available": false` stay on the menu, greyed out (`opacity-50 grayscale`) with a red **SOLD OUT** badge. In the calculators they cannot be selected.
-- **Calculators:** the Deli Hult and Broad Grill tabs add up calories (and estimated price on Broad Grill) for whatever the student checks. Sections with `"select": "single"` (Deli bread, Grill entree) allow one choice. Items without listed calories are marked with `*`.
+- **Calculators:** the Deli Hult and Broad Grill tabs show **Calories** and **Est. cart price** side by side for whatever the student checks. On Broad Grill the price is the item subtotal plus Massachusetts sales tax on meals (6.25% by default, editable in **Hours & Settings → Sales Tax**). Deli Hult is priced by weight, so it shows the per-lb rate instead. Sections with `"select": "single"` (Deli bread, Grill entree) allow one choice. Items without listed calories are marked with `*`.
+- **About the tax rate:** Massachusetts taxes restaurant meals at 6.25%, and towns that adopted the local meals excise add 0.75% (7% total). Meals sold to students at a qualifying school cafeteria are exempt under M.G.L. c. 64H § 6(cc). Set the rate to match what your register actually charges, or `0` to hide tax. Sources: [Mass.gov: Sales Tax on Meals](https://www.mass.gov/guides/sales-tax-on-meals), [Mass.gov: Local Option Excise Taxes](https://www.mass.gov/local-option-excise-taxes), [DOR Directive 10-6: Student Meals](https://www.mass.gov/directive/directive-10-6-exemption-for-student-meals-under-gl-c-64h-s-6cc).
 - **Publishing:** the editor calls the GitHub REST API from the browser. It first reads the current `menu.json` to get its `sha`, then sends `PUT /repos/{owner}/{repo}/contents/menu.json` with the new file (base64-encoded). That creates a normal commit in the repository, and GitHub Pages redeploys the site.
 
 ### `menu.json` structure
 
 ```text
-settings   cafeteria_name, admin_passcode_sha256, nutrition_advisory
-hours      open, main_close, espresso_close ("HH:MM", 24-hour), main_label, afternoon_notice
+settings   cafeteria_name, admin_passcode_sha256, nutrition_advisory,
+           sales_tax_percent (e.g. 6.25), sales_tax_label
+hours      breakfast_start, breakfast_end, lunch_start, lunch_end, espresso_open, espresso_close
+           ("HH:MM", 24-hour), afternoon_notice
 stations[] id, name, tagline, icon (Lucide name), hours_group ("main" or "espresso"), note,
            builder (null, or { title, show_price }),
            Deli only: pricing_model "by_weight", price_per_lb (number or null), price_per_lb_display
