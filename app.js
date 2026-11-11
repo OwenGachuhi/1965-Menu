@@ -930,7 +930,7 @@
         ${a.items.length
           ? `${a.items_title ? `<h4 class="mt-4 text-sm font-bold uppercase tracking-wide text-amber-800">${esc(a.items_title)}</h4>` : ''}
              <ul class="mt-2 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
-               ${a.items.map((it) => `<li class="flex items-start gap-2 text-amber-950">${icon('check', 'mt-1 shrink-0 text-amber-700')}<span>${esc(it)}</span></li>`).join('')}
+               ${a.items.map((it) => `<li class="text-amber-950">${esc(it)}</li>`).join('')}
              </ul>`
           : ''}
         ${a.highlights.length
