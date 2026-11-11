@@ -40,6 +40,54 @@
     },
   };
 
+  // Station color themes. Each palette lists Tailwind shades 50…950 as "R G B"
+  // plus the header background / text / muted-text colors.
+  const SHADES = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+  const THEMES = {
+    green: {
+      label: 'Green',
+      brand: ['236 253 245', '209 250 229', '167 243 208', '110 231 183', '52 211 153', '16 185 129', '5 150 105', '4 120 87', '6 95 70', '6 78 59', '2 44 34'],
+      header: ['6 78 59', '255 255 255', '167 243 208'],
+      meta: '#065f46',
+    },
+    blue: {
+      label: 'Blue',
+      brand: ['239 246 255', '219 234 254', '191 219 254', '147 197 253', '96 165 250', '59 130 246', '37 99 235', '29 78 216', '30 64 175', '30 58 138', '23 37 84'],
+      header: ['30 64 175', '255 255 255', '191 219 254'],
+      meta: '#1e40af',
+    },
+    yellow: {
+      label: 'Yellow',
+      brand: ['254 252 232', '254 249 195', '254 240 138', '253 224 71', '250 204 21', '234 179 8', '202 138 4', '161 98 7', '133 77 14', '113 63 18', '66 32 6'],
+      // Bright yellow header with dark text keeps contrast readable.
+      header: ['250 204 21', '66 32 6', '113 63 18'],
+      meta: '#facc15',
+    },
+    red: {
+      label: 'Red',
+      brand: ['254 242 242', '254 226 226', '254 202 202', '252 165 165', '248 113 113', '239 68 68', '220 38 38', '185 28 28', '153 27 27', '127 29 29', '69 10 10'],
+      header: ['185 28 28', '255 255 255', '254 202 202'],
+      meta: '#b91c1c',
+    },
+    pink: {
+      label: 'Pink',
+      brand: ['253 242 248', '252 231 243', '251 207 232', '249 168 212', '244 114 182', '236 72 153', '219 39 119', '190 24 93', '157 23 77', '131 24 67', '80 7 36'],
+      header: ['219 39 119', '255 255 255', '253 242 248'],
+      meta: '#db2777',
+    },
+  };
+  const DEFAULT_THEME = 'green';
+
+  function applyTheme(name) {
+    const theme = THEMES[name] || THEMES[DEFAULT_THEME];
+    const root = document.documentElement.style;
+    SHADES.forEach((n, i) => root.setProperty(`--brand-${n}`, theme.brand[i]));
+    root.setProperty('--header-bg', theme.header[0]);
+    root.setProperty('--header-fg', theme.header[1]);
+    root.setProperty('--header-muted', theme.header[2]);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.meta);
+  }
+
   // ---------------------------------------------------------------------------
   // State
   // ---------------------------------------------------------------------------
@@ -175,6 +223,7 @@
       tagline: String(st.tagline ?? ''),
       note: String(st.note ?? ''),
       hours_group: st.hours_group === 'espresso' ? 'espresso' : 'main',
+      theme: THEMES[st.theme] ? st.theme : DEFAULT_THEME,
       builder: st.builder && typeof st.builder === 'object' ? st.builder : null,
       sections: (Array.isArray(st.sections) ? st.sections : []).map((sec) => ({
         ...sec,
@@ -185,7 +234,22 @@
         items: (Array.isArray(sec.items) ? sec.items : []).map(normalizeItem),
       })),
     }));
+    menu.announcements = (Array.isArray(menu.announcements) ? menu.announcements : []).map(normalizeAnnouncement);
     return menu;
+  }
+
+  function normalizeAnnouncement(a) {
+    const lines = (v) => (Array.isArray(v) ? v.map((s) => String(s).trim()).filter(Boolean) : []);
+    return {
+      id: String(a.id || uid('announcement')),
+      visible: a.visible !== false,
+      title: String(a.title ?? ''),
+      subtitle: String(a.subtitle ?? ''),
+      items_title: String(a.items_title ?? ''),
+      items: lines(a.items),
+      highlights: lines(a.highlights),
+      closing: String(a.closing ?? ''),
+    };
   }
 
   async function loadMenu() {
@@ -242,10 +306,10 @@
 
   function scheduleCard(label, start, end, isNow) {
     return `
-      <div class="rounded-xl p-3 ${isNow ? 'bg-white/20 ring-2 ring-emerald-300' : 'bg-white/10'}">
-        <dt class="flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide text-emerald-200">
+      <div class="rounded-xl p-3 ${isNow ? 'bg-header-fg/20 ring-2 ring-header-fg/60' : 'bg-header-fg/10'}">
+        <dt class="flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide text-header-muted">
           ${label}
-          ${isNow ? '<span class="rounded-full bg-emerald-300 px-2 py-0.5 text-[0.65rem] font-bold text-emerald-950">Now</span>' : ''}
+          ${isNow ? '<span class="rounded-full bg-header-fg px-2 py-0.5 text-[0.65rem] font-bold text-header">Now</span>' : ''}
         </dt>
         <dd class="mt-0.5 font-semibold">${fmtTime(start)} – ${fmtTime(end)}</dd>
       </div>`;
@@ -264,7 +328,7 @@
               class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold shadow ${s.classes}">
           ${icon(s.icon)} ${esc(s.label)}
         </span>
-        <span id="status-time" class="text-sm text-emerald-100"></span>
+        <span id="status-time" class="text-sm text-header-muted"></span>
       </div>
       <dl class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         ${scheduleCard('Breakfast', h.breakfast_start, h.breakfast_end, meal === 'breakfast')}
@@ -314,7 +378,7 @@
           <button type="button" role="tab" id="tab-${esc(t.id)}" data-tab="${esc(t.id)}"
                   aria-selected="${active}" aria-controls="app" tabindex="${active ? 0 : -1}"
                   class="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition
-                         ${active ? 'bg-emerald-800 text-white shadow' : 'bg-slate-100 text-slate-800 hover:bg-slate-200'}">
+                         ${active ? 'bg-brand-800 text-white shadow' : 'bg-slate-100 text-slate-800 hover:bg-slate-200'}">
             ${icon(t.icon)} ${esc(t.name)}
           </button>`;
       })
@@ -398,7 +462,7 @@
         <div class="flex-1 ${sold ? 'opacity-50 grayscale' : ''}">
           <div class="flex items-start justify-between gap-3">
             <h4 class="font-semibold leading-snug ${sold ? 'line-through decoration-2' : ''}">${itemName(item)}</h4>
-            ${isNum(item.price) ? `<span class="whitespace-nowrap font-bold text-emerald-900">${fmtPrice(item.price)}</span>` : ''}
+            ${isNum(item.price) ? `<span class="whitespace-nowrap font-bold text-brand-900">${fmtPrice(item.price)}</span>` : ''}
           </div>
           ${item.description ? `<p class="mt-1 text-sm text-slate-600">${esc(item.description)}</p>` : ''}
           ${itemChips(item)}
@@ -414,7 +478,7 @@
       <section aria-labelledby="${esc(headingId)}" class="mt-6">
         <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-200 pb-2">
           <h3 id="${esc(headingId)}" class="text-lg font-bold">${esc(section.title)}</h3>
-          ${section.price_note ? `<p class="text-sm font-semibold text-emerald-800">${esc(section.price_note)}</p>` : ''}
+          ${section.price_note ? `<p class="text-sm font-semibold text-brand-800">${esc(section.price_note)}</p>` : ''}
         </div>
         ${section.items.length
           ? `<ul class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">${section.items.map((item) => itemCard(item, station, section)).join('')}</ul>`
@@ -427,7 +491,7 @@
     return `
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="flex items-center gap-3">
-          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-emerald-100 text-2xl text-emerald-800">${icon(station.icon || 'utensils')}</span>
+          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-brand-100 text-2xl text-brand-800">${icon(station.icon || 'utensils')}</span>
           <div>
             <h2 class="text-xl font-extrabold sm:text-2xl">${esc(station.name)}</h2>
             ${station.tagline ? `<p class="text-sm font-medium text-slate-600">${esc(station.tagline)}</p>` : ''}
@@ -443,14 +507,14 @@
 
   function weightBanner(station) {
     if (station.pricing_model !== 'by_weight') return '';
-    const rate = isNum(station.price_per_lb) ? `<p class="text-base font-bold text-emerald-900">Current rate: ${fmtPrice(station.price_per_lb)} per lb</p>` : '';
+    const rate = isNum(station.price_per_lb) ? `<p class="text-base font-bold text-brand-900">Current rate: ${fmtPrice(station.price_per_lb)} per lb</p>` : '';
     return `
-      <div class="mt-4 flex gap-3 rounded-xl border-2 border-emerald-700 bg-emerald-50 p-4">
-        <span class="text-2xl text-emerald-800">${icon('scale')}</span>
+      <div class="mt-4 flex gap-3 rounded-xl border-2 border-brand-700 bg-brand-50 p-4">
+        <span class="text-2xl text-brand-800">${icon('scale')}</span>
         <div>
-          <p class="text-lg font-extrabold text-emerald-950">Priced by Weight — Pay per lb at the register</p>
+          <p class="text-lg font-extrabold text-brand-950">Priced by Weight — Pay per lb at the register</p>
           ${rate}
-          ${station.price_per_lb_display ? `<p class="text-sm font-medium text-emerald-900">${esc(station.price_per_lb_display)}</p>` : ''}
+          ${station.price_per_lb_display ? `<p class="text-sm font-medium text-brand-900">${esc(station.price_per_lb_display)}</p>` : ''}
         </div>
       </div>`;
   }
@@ -495,8 +559,8 @@
                class="flex h-full items-start gap-3 rounded-xl border p-3 transition
                       ${sold
                         ? 'cursor-not-allowed border-slate-300 bg-slate-100 opacity-50 grayscale'
-                        : 'cursor-pointer border-slate-200 bg-white hover:border-emerald-500 has-[:checked]:border-emerald-700 has-[:checked]:bg-emerald-50 has-[:checked]:ring-1 has-[:checked]:ring-emerald-700'}">
-          <input id="${esc(inputId)}" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-emerald-700"
+                        : 'cursor-pointer border-slate-200 bg-white hover:border-brand-500 has-[:checked]:border-brand-700 has-[:checked]:bg-brand-50 has-[:checked]:ring-1 has-[:checked]:ring-brand-700'}">
+          <input id="${esc(inputId)}" type="checkbox" class="mt-0.5 h-5 w-5 shrink-0 accent-brand-700"
                  data-builder="${esc(station.id)}" data-item="${esc(item.id)}" data-group="${esc(group)}"
                  ${checked && !sold ? 'checked' : ''} ${sold ? 'disabled' : ''} />
           <span class="min-w-0 flex-1">
@@ -543,7 +607,7 @@
       <div class="grid grid-cols-2 gap-4" aria-live="polite" aria-atomic="true">
         <div>
           ${label('Calories')}
-          <p class="text-2xl font-extrabold text-emerald-900">${calorieText}</p>
+          <p class="text-2xl font-extrabold text-brand-900">${calorieText}</p>
         </div>
         <div class="border-l border-slate-200 pl-4">${priceBlock}</div>
       </div>
@@ -603,13 +667,13 @@
   function cartControl(key, item) {
     const qty = state.cart[key] || 0;
     const name = esc(item.name);
-    const btn = 'inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-bold text-emerald-900 hover:bg-emerald-100';
+    const btn = 'inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-bold text-brand-900 hover:bg-brand-100';
     if (!qty) {
       return `<button type="button" data-cart-add="${esc(key)}" aria-label="Add ${name} to estimated cart"
-                      class="${btn} gap-1 border border-emerald-700 bg-white">${icon('plus')} Add</button>`;
+                      class="${btn} gap-1 border border-brand-700 bg-white">${icon('plus')} Add</button>`;
     }
     return `
-      <div class="inline-flex items-center rounded-lg border border-emerald-700 bg-emerald-50">
+      <div class="inline-flex items-center rounded-lg border border-brand-700 bg-brand-50">
         <button type="button" data-cart-dec="${esc(key)}" aria-label="Remove one ${name}" class="${btn}">${icon('minus')}</button>
         <span class="min-w-[2rem] text-center text-sm font-bold" aria-label="${qty} ${name} in cart">${qty}</span>
         <button type="button" data-cart-inc="${esc(key)}" aria-label="Add one more ${name}" class="${btn}" ${qty >= MAX_QTY ? 'disabled' : ''}>${icon('plus')}</button>
@@ -687,7 +751,7 @@
         <dl class="mt-3 space-y-1 border-t border-slate-200 pt-3 text-sm">
           <div class="flex justify-between"><dt>Subtotal</dt><dd>${fmtPrice(subtotal)}</dd></div>
           ${taxed ? `<div class="flex justify-between"><dt>${esc(taxText())}</dt><dd>${fmtPrice(tax)}</dd></div>` : ''}
-          <div class="flex justify-between text-base font-extrabold text-emerald-900"><dt>Estimated total</dt><dd>${fmtPrice(total)}</dd></div>
+          <div class="flex justify-between text-base font-extrabold text-brand-900"><dt>Estimated total</dt><dd>${fmtPrice(total)}</dd></div>
         </dl>
         <p class="mt-2 text-xs text-slate-500">Estimate only. This is not an order; pay at the register, where prices and tax are final.${hasWeight ? ' Deli Hult is priced by weight and is not included in the total.' : ''}</p>
       </div>`;
@@ -698,7 +762,7 @@
           ${state.cartOpen ? panel : ''}
           <button type="button" data-cart-toggle aria-expanded="${state.cartOpen}" aria-controls="cart-panel"
                   class="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50">
-            <span class="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-800 text-lg text-white">
+            <span class="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-800 text-lg text-white">
               ${icon('shopping-cart')}
               ${count ? `<span class="absolute -right-1 -top-1 grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-amber-400 px-1 text-xs font-bold text-amber-950">${count}</span>` : ''}
             </span>
@@ -706,7 +770,7 @@
               <span class="block text-xs font-semibold uppercase tracking-wide text-slate-500">Estimated cart · ${count} ${count === 1 ? 'item' : 'items'}</span>
               <span class="block truncate text-xs text-slate-600">${hint}</span>
             </span>
-            <span class="text-xl font-extrabold text-emerald-900">${fmtPrice(total)}</span>
+            <span class="text-xl font-extrabold text-brand-900">${fmtPrice(total)}</span>
             <span class="text-slate-500">${icon(state.cartOpen ? 'chevron-down' : 'chevron-up')}</span>
             <span class="sr-only">${state.cartOpen ? 'Hide' : 'Show'} cart details</span>
           </button>
@@ -790,7 +854,7 @@
               <fieldset>
                 <legend class="text-base font-bold">${esc(sec.title)}
                   ${sec.builder.select === 'single' ? '<span class="text-sm font-normal text-slate-500">(pick one)</span>' : ''}
-                  ${sec.price_note && sec.price_note.toLowerCase() !== 'pick one' ? `<span class="text-sm font-semibold text-emerald-800">· ${esc(sec.price_note)}</span>` : ''}
+                  ${sec.price_note && sec.price_note.toLowerCase() !== 'pick one' ? `<span class="text-sm font-semibold text-brand-800">· ${esc(sec.price_note)}</span>` : ''}
                 </legend>
                 <div class="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   ${sec.items.map((item) => builderOption(station, sec, item)).join('') || '<p class="text-sm text-slate-500">No options listed.</p>'}
@@ -858,8 +922,41 @@
   // ---------------------------------------------------------------------------
   // Public view: pages
   // ---------------------------------------------------------------------------
+  function announcementCard(a) {
+    return `
+      <article class="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-5 shadow-sm sm:p-6">
+        <h3 class="text-2xl font-extrabold leading-tight text-amber-950 sm:text-3xl">${esc(a.title)}</h3>
+        ${a.subtitle ? `<p class="mt-1 text-base font-medium text-amber-900">${esc(a.subtitle)}</p>` : ''}
+        ${a.items.length
+          ? `${a.items_title ? `<h4 class="mt-4 text-sm font-bold uppercase tracking-wide text-amber-800">${esc(a.items_title)}</h4>` : ''}
+             <ul class="mt-2 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+               ${a.items.map((it) => `<li class="flex items-start gap-2 text-amber-950">${icon('check', 'mt-1 shrink-0 text-amber-700')}<span>${esc(it)}</span></li>`).join('')}
+             </ul>`
+          : ''}
+        ${a.highlights.length
+          ? `<p class="mt-4 flex flex-wrap gap-2">${a.highlights
+              .map((h) => `<span class="rounded-full bg-amber-900 px-3 py-1 text-sm font-bold text-white">${esc(h)}</span>`)
+              .join('')}</p>`
+          : ''}
+        ${a.closing ? `<p class="mt-4 font-semibold italic text-amber-950">${esc(a.closing)}</p>` : ''}
+      </article>`;
+  }
+
+  function renderAnnouncements() {
+    const list = state.menu.announcements.filter((a) => a.visible && a.title.trim());
+    if (!list.length) return '';
+    return `
+      <section aria-labelledby="announcements-heading" class="mb-8">
+        <h2 id="announcements-heading" class="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-slate-600">
+          ${icon('megaphone')} Announcements
+        </h2>
+        <div class="mt-3 grid gap-4 ${list.length > 1 ? 'lg:grid-cols-2' : ''}">${list.map(announcementCard).join('')}</div>
+      </section>`;
+  }
+
   function renderAllStations(status) {
     return `
+      ${renderAnnouncements()}
       <p class="text-sm text-slate-600">The full menu for every station. Pick a station tab above for details${state.menu.stations.some((s) => s.builder) ? ' and the calorie calculators' : ''}.</p>
       <div class="mt-4 space-y-8">
         ${state.menu.stations
@@ -870,7 +967,7 @@
               ${st.sections.map((sec) => sectionCards(sec, st)).join('')}
               ${st.builder
                 ? `<button type="button" data-goto-tab="${esc(st.id)}"
-                           class="mt-5 inline-flex items-center gap-2 rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-900">
+                           class="mt-5 inline-flex items-center gap-2 rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-900">
                      ${icon('calculator')} Open ${esc(st.builder.title || 'calculator')}
                    </button>`
                 : ''}
@@ -895,6 +992,7 @@
     const status = getStatus();
     const station = state.menu.stations.find((s) => s.id === state.activeTab);
     pruneCart();
+    applyTheme(station ? station.theme : DEFAULT_THEME);
     $('#app').innerHTML = station ? renderStation(station, status) : renderAllStations(status);
     renderCartBar();
   }
@@ -1025,6 +1123,7 @@
   function managerTabs() {
     return [
       { id: 'settings', name: 'Hours & Settings', icon: 'settings' },
+      { id: 'announcements', name: 'Announcements', icon: 'megaphone' },
       ...state.menu.stations.map((st) => ({ id: st.id, name: st.name, icon: st.icon || 'utensils' })),
     ];
   }
@@ -1043,12 +1142,13 @@
       .join('');
   }
 
-  function field({ label, scope, fieldName, value, type = 'text', s = '', hint = '', attrs = '' }) {
+  function field({ label, scope, fieldName, value, type = 'text', s = '', hint = '', attrs = '', lines = false }) {
     const id = `f-${scope}-${s}-${fieldName}`;
     const isArea = type === 'textarea';
     const dataType = type === 'number' ? 'number' : 'text';
+    // lines: textarea edits a list, one entry per line.
     const control = isArea
-      ? `<textarea id="${esc(id)}" rows="3" class="${inputCls}" data-scope="${scope}" data-field="${esc(fieldName)}" data-s="${esc(s)}" data-type="text" ${attrs}>${esc(value)}</textarea>`
+      ? `<textarea id="${esc(id)}" rows="${lines ? 6 : 3}" class="${inputCls}" data-scope="${scope}" data-field="${esc(fieldName)}" data-s="${esc(s)}" data-type="${lines ? 'lines' : 'text'}" ${attrs}>${esc(lines ? value.join('\n') : value)}</textarea>`
       : `<input id="${esc(id)}" type="${type}" class="${inputCls}" value="${esc(value ?? '')}" data-scope="${scope}" data-field="${esc(fieldName)}" data-s="${esc(s)}" data-type="${dataType}" ${attrs} />`;
     return `
       <div>
@@ -1248,6 +1348,12 @@
           <div class="mt-3 grid gap-3">
             ${field({ label: 'Tagline', scope: 'station', fieldName: 'tagline', value: st.tagline, s })}
             ${field({ label: 'Station note (shown to students)', scope: 'station', fieldName: 'note', value: st.note, s, type: 'textarea' })}
+            <div>
+              <label for="st-theme-${s}" class="block text-sm font-semibold">Color theme (used while students view this tab)</label>
+              <select id="st-theme-${s}" data-scope="station" data-field="theme" data-s="${s}" data-type="text" class="${inputCls}">
+                ${Object.entries(THEMES).map(([key, t]) => `<option value="${key}" ${st.theme === key ? 'selected' : ''}>${esc(t.label)}</option>`).join('')}
+              </select>
+            </div>
           </div>
         </section>
         ${st.sections.map((_, k) => renderManagerSection(s, k)).join('')}
@@ -1258,12 +1364,57 @@
       </div>`;
   }
 
+  function renderAnnouncementsPanel() {
+    const list = state.menu.announcements;
+    return `
+      <div class="space-y-4">
+        <p class="text-sm text-slate-600">Announcements appear at the top of the <strong>All Stations</strong> home page. Uncheck <strong>Show on home page</strong> to hide one without deleting it.</p>
+        ${list
+          .map((a, i) => `
+            <section class="${cardCls}" aria-labelledby="ann-${i}-h">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h3 id="ann-${i}-h" class="flex items-center gap-2 text-base font-bold">${icon('megaphone')} ${esc(a.title || 'Untitled announcement')}</h3>
+                <label class="flex items-center gap-2 text-sm font-semibold">
+                  <input type="checkbox" data-scope="announcement" data-s="${i}" data-field="visible" data-type="checkbox" class="h-4 w-4 accent-emerald-700" ${a.visible ? 'checked' : ''} />
+                  Show on home page
+                </label>
+              </div>
+              <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                ${field({ label: 'Title', scope: 'announcement', fieldName: 'title', value: a.title, s: i })}
+                ${field({ label: 'Subtitle', scope: 'announcement', fieldName: 'subtitle', value: a.subtitle, s: i })}
+                ${field({ label: 'List heading', scope: 'announcement', fieldName: 'items_title', value: a.items_title, s: i, hint: 'For example "Includes". Leave blank for none.' })}
+                <div></div>
+                ${field({ label: 'List items (one per line)', scope: 'announcement', fieldName: 'items', value: a.items, s: i, type: 'textarea', lines: true })}
+                ${field({ label: 'Highlights (one per line, shown as badges)', scope: 'announcement', fieldName: 'highlights', value: a.highlights, s: i, type: 'textarea', lines: true })}
+                <div class="sm:col-span-2">
+                  ${field({ label: 'Closing line', scope: 'announcement', fieldName: 'closing', value: a.closing, s: i })}
+                </div>
+              </div>
+              <button type="button" data-action="delete-announcement" data-s="${i}"
+                      class="mt-3 inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50">
+                ${icon('trash-2')} Delete announcement
+              </button>
+            </section>`)
+          .join('')}
+        <button type="button" data-action="add-announcement"
+                class="inline-flex items-center gap-1 rounded-lg border-2 border-dashed border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-900 hover:bg-emerald-50">
+          ${icon('plus')} Add announcement
+        </button>
+      </div>`;
+  }
+
   function renderManagerBody({ keepScroll = false } = {}) {
     const body = $('#manager-body');
     const scroll = body.scrollTop;
     const s = state.menu.stations.findIndex((st) => st.id === state.managerTab);
-    if (s === -1) state.managerTab = 'settings';
-    body.innerHTML = s === -1 ? renderSettingsPanel() : renderStationPanel(s);
+    if (state.managerTab === 'announcements') {
+      body.innerHTML = renderAnnouncementsPanel();
+    } else if (s !== -1) {
+      body.innerHTML = renderStationPanel(s);
+    } else {
+      state.managerTab = 'settings';
+      body.innerHTML = renderSettingsPanel();
+    }
     body.scrollTop = keepScroll ? scroll : 0;
     refreshIcons();
   }
@@ -1315,6 +1466,8 @@
       return Number.isFinite(n) ? n : null;
     }
     if (type === 'list') return el.value.split(',').map((v) => v.trim()).filter(Boolean);
+    if (type === 'lines') return el.value.split('\n').map((v) => v.trim()).filter(Boolean);
+    if (type === 'checkbox') return el.checked;
     return el.value;
   }
 
@@ -1343,6 +1496,8 @@
       menu.stations[el.dataset.s][fieldName] = value;
     } else if (scope === 'settings') {
       menu.settings[fieldName] = value;
+    } else if (scope === 'announcement') {
+      menu.announcements[el.dataset.s][fieldName] = value;
     } else if (scope === 'hours') {
       menu.hours[fieldName] = value;
     }
@@ -1440,6 +1595,23 @@
         markChanged();
         break;
       }
+      case 'add-announcement': {
+        state.menu.announcements.push(normalizeAnnouncement({ title: 'New announcement', visible: true }));
+        renderManagerBody({ keepScroll: true });
+        const input = $(`#f-announcement-${state.menu.announcements.length - 1}-title`);
+        input?.focus();
+        input?.select();
+        markChanged();
+        break;
+      }
+      case 'delete-announcement': {
+        const a = state.menu.announcements[s];
+        if (!window.confirm(`Delete the "${a.title || 'untitled'}" announcement?`)) return;
+        state.menu.announcements.splice(s, 1);
+        renderManagerBody({ keepScroll: true });
+        markChanged();
+        break;
+      }
       case 'forget-token': {
         state.gh.token = '';
         state.gh.remember = false;
@@ -1472,6 +1644,9 @@
       if (t.breakfast_end > t.lunch_start) errors.push('Breakfast must end before (or when) lunch starts.');
       if (t.lunch_end > t.espresso_close) errors.push('The Espresso Bar must close at or after the end of lunch.');
     }
+    menu.announcements.forEach((a) => {
+      if (a.visible && !a.title.trim()) errors.push('Every announcement shown on the home page needs a title.');
+    });
     const tax = menu.settings.sales_tax_percent;
     if (tax != null && !(tax >= 0 && tax <= 100)) errors.push('Sales tax rate must be between 0 and 100%.');
     menu.stations.forEach((st) => {

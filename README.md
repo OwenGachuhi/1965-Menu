@@ -111,6 +111,8 @@ The passcode is stored in `menu.json` as a SHA-256 hash (`settings.admin_passcod
   - End of lunch to Espresso Bar close (3:00 PM – 6:00 PM) → amber **Afternoon Hours • Espresso Bar & Baked Goods Only**
   - Any other time → red **Cafeteria Currently Closed • Viewing Menu**
 - **Sold Out:** items with `"available": false` stay on the menu, greyed out (`opacity-50 grayscale`) with a red **SOLD OUT** badge. In the calculators they cannot be selected.
+- **Station colors:** each tab switches the site's color theme: All Stations and Olive Branch are green, Mac's Shack blue, Deli Hult yellow, Broad Grill red, and Bakery & Espresso Bar pink. Managers can change a station's color in the dashboard (station tab → **Color theme**). Status colors (green "Open Now", "Serving now", red "SOLD OUT") stay the same on every tab so they keep their meaning.
+- **Announcements:** shown at the top of the All Stations home page (for example the Take Home Turkey Dinner). Managers edit them in the dashboard's **Announcements** tab: title, subtitle, a list (one item per line), highlight badges, and a closing line. Uncheck **Show on home page** to hide one without deleting it.
 - **Estimated cart (bottom of the screen):** students tap **+ Add** on any priced menu item (Olive Branch, Mac's Shack, Bakery) and use the **− / +** buttons to change quantity. Whatever they check in the Deli Hult and Broad Grill calculators is added too, as one "sandwich" or "plate" line. The bar shows the item count and the estimated total including Massachusetts sales tax. Tap it to see each line, the subtotal, the tax, and the total, or to clear the cart. Deli Hult is priced by weight, so it is listed but not included in the total. Sold-out items drop out of the cart automatically. This is only an estimate: nothing is ordered or sent anywhere, and the cart resets when the page is reloaded.
 - **Calculators:** the Deli Hult and Broad Grill tabs show **Calories** and **Est. price** side by side for whatever the student checks. On Broad Grill the price is the item subtotal plus Massachusetts sales tax on meals (6.25% by default, editable in **Hours & Settings → Sales Tax**). Deli Hult is priced by weight, so it shows the per-lb rate instead. Sections with `"select": "single"` (Deli bread, Grill entree) allow one choice. Items without listed calories are marked with `*`.
 - **About the tax rate:** Massachusetts taxes restaurant meals at 6.25%, and towns that adopted the local meals excise add 0.75% (7% total). Meals sold to students at a qualifying school cafeteria are exempt under M.G.L. c. 64H § 6(cc). Set the rate to match what your register actually charges, or `0` to hide tax. Sources: [Mass.gov: Sales Tax on Meals](https://www.mass.gov/guides/sales-tax-on-meals), [Mass.gov: Local Option Excise Taxes](https://www.mass.gov/local-option-excise-taxes), [DOR Directive 10-6: Student Meals](https://www.mass.gov/directive/directive-10-6-exemption-for-student-meals-under-gl-c-64h-s-6cc).
@@ -123,7 +125,9 @@ settings   cafeteria_name, admin_passcode_sha256, nutrition_advisory,
            sales_tax_percent (e.g. 6.25), sales_tax_label
 hours      breakfast_start, breakfast_end, lunch_start, lunch_end, espresso_open, espresso_close
            ("HH:MM", 24-hour)
-stations[] id, name, tagline, icon (Lucide name), hours_group ("main" or "espresso"), note,
+announcements[] id, visible, title, subtitle, items_title, items[], highlights[], closing
+stations[] id, name, tagline, icon (Lucide name), hours_group ("main" or "espresso"),
+           theme ("green" | "blue" | "yellow" | "red" | "pink"), note,
            builder (null, or { title, show_price }),
            Deli only: pricing_model "by_weight", price_per_lb (number or null), price_per_lb_display
   sections[] id, title, price_note, builder (null, or { select: "single"|"multi", group })
