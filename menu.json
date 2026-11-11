@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "last_updated": "2026-11-12T12:00:00.000Z",
+  "last_updated": "2026-11-12T13:00:00.000Z",
   "settings": {
     "cafeteria_name": "1965 Cafeteria",
     "admin_passcode_sha256": "7ec57cf4f49ac56e7dc7388b4ac0722dea721924522f6a20a255b3bbf8d3f00d",
@@ -36,6 +36,23 @@
         "Order today!"
       ],
       "closing": "Enjoy a home-style Thanksgiving dinner without the hassle!"
+    },
+    {
+      "id": "holiday-pie-sale",
+      "visible": true,
+      "title": "Holiday Pie Sale",
+      "subtitle": "Bring home a little holiday cheer! Choose from the pies available in the café.",
+      "items_title": "Available pies",
+      "items": [
+        "Pecan",
+        "Pumpkin",
+        "Apple",
+        "Cranberry"
+      ],
+      "highlights": [
+        "Free samples available — ask at the counter"
+      ],
+      "closing": ""
     }
   ],
   "stations": [
