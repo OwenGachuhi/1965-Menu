@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "last_updated": "2026-11-12T00:00:00.000Z",
+  "last_updated": "2026-11-12T12:00:00.000Z",
   "settings": {
     "cafeteria_name": "1965 Cafeteria",
     "admin_passcode_sha256": "7ec57cf4f49ac56e7dc7388b4ac0722dea721924522f6a20a255b3bbf8d3f00d",
@@ -16,6 +16,28 @@
     "espresso_open": "14:00",
     "espresso_close": "18:00"
   },
+  "announcements": [
+    {
+      "id": "take-home-turkey-dinner",
+      "visible": true,
+      "title": "Take Home Turkey Dinner",
+      "subtitle": "A delicious holiday meal, ready for you to enjoy.",
+      "items_title": "Includes",
+      "items": [
+        "Roasted Turkey",
+        "Mashed Potatoes with Gravy",
+        "Seasonal Vegetables",
+        "Stuffing",
+        "Cranberry Sauce",
+        "Dinner Roll"
+      ],
+      "highlights": [
+        "Serves 8–10 people",
+        "Order today!"
+      ],
+      "closing": "Enjoy a home-style Thanksgiving dinner without the hassle!"
+    }
+  ],
   "stations": [
     {
       "id": "olive-branch",
@@ -23,6 +45,7 @@
       "tagline": "Roman Style Pizzas & Specials",
       "icon": "pizza",
       "hours_group": "main",
+      "theme": "green",
       "note": "",
       "builder": null,
       "sections": [
@@ -132,6 +155,7 @@
       "tagline": "Catch of the Day",
       "icon": "fish",
       "hours_group": "main",
+      "theme": "blue",
       "note": "All entrees $15.29 and served with two sides.",
       "builder": null,
       "sections": [
@@ -247,6 +271,7 @@
       "tagline": "Build Your Own Sandwich in Style",
       "icon": "sandwich",
       "hours_group": "main",
+      "theme": "yellow",
       "note": "",
       "pricing_model": "by_weight",
       "price_per_lb": null,
@@ -587,6 +612,7 @@
       "tagline": "Flex Your Signature Flavor",
       "icon": "hamburger",
       "hours_group": "main",
+      "theme": "red",
       "note": "",
       "builder": {
         "title": "Grill Plate Calculator",
@@ -907,6 +933,7 @@
       "tagline": "Served 2:00 PM – 6:00 PM",
       "icon": "croissant",
       "hours_group": "espresso",
+      "theme": "pink",
       "note": "Open 2:00 PM – 6:00 PM daily. After lunch ends at 3:00 PM, only the Espresso Bar and Bakery items are available.",
       "builder": null,
       "sections": [
