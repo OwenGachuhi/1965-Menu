@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "last_updated": "2026-11-12T13:00:00.000Z",
+  "last_updated": "2026-11-12T15:00:00.000Z",
   "settings": {
     "cafeteria_name": "1965 Cafeteria",
     "admin_passcode_sha256": "7ec57cf4f49ac56e7dc7388b4ac0722dea721924522f6a20a255b3bbf8d3f00d",
@@ -295,7 +295,8 @@
       "price_per_lb_display": "Priced by Weight at Register",
       "builder": {
         "title": "Sandwich Calorie Builder",
-        "show_price": false
+        "show_price": false,
+        "cart_label": "sandwich"
       },
       "sections": [
         {
@@ -633,7 +634,8 @@
       "note": "",
       "builder": {
         "title": "Grill Plate Calculator",
-        "show_price": true
+        "show_price": true,
+        "cart_label": "plate"
       },
       "sections": [
         {
@@ -937,6 +939,421 @@
               "calories": 400,
               "description": "",
               "allergens": [],
+              "tags": [],
+              "available": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "salad-bar",
+      "name": "Salad Bar",
+      "tagline": "Lunch · Priced by weight",
+      "icon": "salad",
+      "hours_group": "lunch",
+      "theme": "teal",
+      "note": "Everything at the salad bar, including soup, is weighed and priced per lb at the register. Calories are estimates for a typical serving and change with how much you take; blank calories mean we do not have a reliable estimate. Allergen badges are based on typical recipes, so ask staff if you have an allergy.",
+      "pricing_model": "by_weight",
+      "price_per_lb": null,
+      "price_per_lb_display": "Priced by Weight at Register",
+      "builder": {
+        "title": "Salad Calorie Builder",
+        "show_price": false,
+        "cart_label": "salad"
+      },
+      "sections": [
+        {
+          "id": "salad-greens",
+          "title": "Greens",
+          "price_note": "",
+          "builder": {
+            "select": "multi"
+          },
+          "items": [
+            {
+              "id": "mixed-greens",
+              "name": "Mixed Greens",
+              "price": null,
+              "calories": 10,
+              "description": "Est. per 1 cup",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "chopped-romaine",
+              "name": "Chopped Romaine",
+              "price": null,
+              "calories": 8,
+              "description": "Est. per 1 cup",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
+          ]
+        },
+        {
+          "id": "salad-vegetables",
+          "title": "Vegetables",
+          "price_note": "",
+          "builder": {
+            "select": "multi"
+          },
+          "items": [
+            {
+              "id": "roasted-butternut-squash",
+              "name": "Roasted Butternut Squash",
+              "price": null,
+              "calories": null,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "salad-cherry-tomatoes",
+              "name": "Cherry Tomatoes",
+              "price": null,
+              "calories": 13,
+              "description": "Est. per ½ cup",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "salad-corn",
+              "name": "Corn",
+              "price": null,
+              "calories": 35,
+              "description": "Est. per ¼ cup",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "salad-cucumbers",
+              "name": "Cucumbers",
+              "price": null,
+              "calories": 8,
+              "description": "Est. per ½ cup",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "salad-shredded-carrots",
+              "name": "Shredded Carrots",
+              "price": null,
+              "calories": 11,
+              "description": "Est. per ¼ cup",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "salad-red-onions",
+              "name": "Red Onions",
+              "price": null,
+              "calories": 12,
+              "description": "Est. per ¼ cup",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "salad-beets",
+              "name": "Beets",
+              "price": null,
+              "calories": 19,
+              "description": "Est. per ¼ cup",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "green-beans-red-peppers",
+              "name": "Green Beans & Red Peppers",
+              "price": null,
+              "calories": 20,
+              "description": "Est. per ½ cup",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
+          ]
+        },
+        {
+          "id": "salad-proteins",
+          "title": "Protein & Cheese",
+          "price_note": "",
+          "builder": {
+            "select": "multi"
+          },
+          "items": [
+            {
+              "id": "hard-boiled-egg",
+              "name": "Hard-Boiled Egg",
+              "price": null,
+              "calories": 78,
+              "description": "Est. per 1 egg",
+              "allergens": [
+                "Contains Egg"
+              ],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "salad-grilled-chicken",
+              "name": "Grilled Chicken",
+              "price": null,
+              "calories": 140,
+              "description": "Est. per 3 oz",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "feta-cheese",
+              "name": "Feta Cheese",
+              "price": null,
+              "calories": 75,
+              "description": "Est. per 1 oz (¼ cup)",
+              "allergens": [
+                "Contains Dairy"
+              ],
+              "tags": [],
+              "available": true
+            }
+          ]
+        },
+        {
+          "id": "salad-prepared",
+          "title": "Grains & Roasted Vegetables",
+          "price_note": "",
+          "builder": {
+            "select": "multi"
+          },
+          "items": [
+            {
+              "id": "couscous-salad",
+              "name": "Couscous Salad",
+              "price": null,
+              "calories": null,
+              "description": "",
+              "allergens": [
+                "Contains Gluten"
+              ],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "roasted-eggplant",
+              "name": "Roasted Eggplant",
+              "price": null,
+              "calories": null,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "roasted-cauliflower",
+              "name": "Roasted Cauliflower",
+              "price": null,
+              "calories": null,
+              "description": "",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
+          ]
+        },
+        {
+          "id": "salad-crunchy",
+          "title": "Crunchy Toppings",
+          "price_note": "",
+          "builder": {
+            "select": "multi"
+          },
+          "items": [
+            {
+              "id": "craisins",
+              "name": "Craisins",
+              "price": null,
+              "calories": 65,
+              "description": "Est. per 2 Tbsp",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "sliced-almonds",
+              "name": "Sliced Almonds",
+              "price": null,
+              "calories": 66,
+              "description": "Est. per 2 Tbsp",
+              "allergens": [
+                "Contains Tree Nuts"
+              ],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "wasabi-peas",
+              "name": "Wasabi Peas",
+              "price": null,
+              "calories": 50,
+              "description": "Est. per 2 Tbsp",
+              "allergens": [
+                "Contains Gluten",
+                "Contains Soy"
+              ],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "croutons",
+              "name": "Croutons",
+              "price": null,
+              "calories": 45,
+              "description": "Est. per ¼ cup",
+              "allergens": [
+                "Contains Gluten"
+              ],
+              "tags": [],
+              "available": true
+            }
+          ]
+        },
+        {
+          "id": "salad-dressings",
+          "title": "Dressings",
+          "price_note": "",
+          "builder": {
+            "select": "multi"
+          },
+          "items": [
+            {
+              "id": "caesar-dressing",
+              "name": "Caesar",
+              "price": null,
+              "calories": 160,
+              "description": "Est. per 2 Tbsp",
+              "allergens": [
+                "Contains Egg",
+                "Contains Dairy",
+                "Contains Fish"
+              ],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "salad-ranch",
+              "name": "Ranch",
+              "price": null,
+              "calories": 130,
+              "description": "Est. per 2 Tbsp",
+              "allergens": [
+                "Contains Dairy",
+                "Contains Egg"
+              ],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "balsamic-dressing",
+              "name": "Balsamic",
+              "price": null,
+              "calories": 70,
+              "description": "Est. per 2 Tbsp",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "blue-cheese-dressing",
+              "name": "Blue Cheese",
+              "price": null,
+              "calories": 150,
+              "description": "Est. per 2 Tbsp",
+              "allergens": [
+                "Contains Dairy",
+                "Contains Egg"
+              ],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "italian-dressing",
+              "name": "Italian",
+              "price": null,
+              "calories": 80,
+              "description": "Est. per 2 Tbsp",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
+          ]
+        },
+        {
+          "id": "salad-oil-vinegar",
+          "title": "Oil & Vinegar",
+          "price_note": "",
+          "builder": {
+            "select": "multi"
+          },
+          "items": [
+            {
+              "id": "olive-oil",
+              "name": "Olive Oil",
+              "price": null,
+              "calories": 119,
+              "description": "Est. per 1 Tbsp",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "balsamic-vinegar",
+              "name": "Balsamic Vinegar",
+              "price": null,
+              "calories": 14,
+              "description": "Est. per 1 Tbsp",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            },
+            {
+              "id": "red-wine-vinegar",
+              "name": "Red Wine Vinegar",
+              "price": null,
+              "calories": 3,
+              "description": "Est. per 1 Tbsp",
+              "allergens": [],
+              "tags": [],
+              "available": true
+            }
+          ]
+        },
+        {
+          "id": "salad-soup",
+          "title": "Soup Special",
+          "price_note": "Weighed separately",
+          "builder": null,
+          "items": [
+            {
+              "id": "seafood-chowder",
+              "name": "Seafood Chowder",
+              "price": null,
+              "calories": null,
+              "description": "Fish, clams, shrimp, vegetables and potatoes in rich creamy base. 170–266 Cal depending on portion.",
+              "allergens": [
+                "Contains Dairy",
+                "Contains Gluten",
+                "Contains Fish",
+                "Contains Shellfish"
+              ],
               "tags": [],
               "available": true
             }

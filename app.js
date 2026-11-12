@@ -75,6 +75,12 @@
       header: ['219 39 119', '255 255 255', '253 242 248'],
       meta: '#db2777',
     },
+    teal: {
+      label: 'Teal',
+      brand: ['240 253 250', '204 251 241', '153 246 228', '94 234 212', '45 212 191', '20 184 166', '13 148 136', '15 118 110', '17 94 89', '19 78 74', '4 47 46'],
+      header: ['15 118 110', '255 255 255', '153 246 228'],
+      meta: '#0f766e',
+    },
   };
   const DEFAULT_THEME = 'green';
 
@@ -222,7 +228,8 @@
       name: String(st.name ?? ''),
       tagline: String(st.tagline ?? ''),
       note: String(st.note ?? ''),
-      hours_group: st.hours_group === 'espresso' ? 'espresso' : 'main',
+      // main = breakfast through lunch, lunch = lunch only, espresso = Espresso Bar hours.
+      hours_group: ['espresso', 'lunch'].includes(st.hours_group) ? st.hours_group : 'main',
       theme: THEMES[st.theme] ? st.theme : DEFAULT_THEME,
       builder: st.builder && typeof st.builder === 'object' ? st.builder : null,
       sections: (Array.isArray(st.sections) ? st.sections : []).map((sec) => ({
@@ -298,7 +305,9 @@
   }
 
   function isStationServing(station) {
-    return station.hours_group === 'espresso' ? espressoServing() : mainServing();
+    if (station.hours_group === 'espresso') return espressoServing();
+    if (station.hours_group === 'lunch') return inWindow(nowMinutes(), state.menu.hours.lunch_start, state.menu.hours.lunch_end);
+    return mainServing();
   }
 
   // Changes whenever anything time-dependent on the page should re-render.
@@ -721,7 +730,7 @@
     return `
       <li class="flex items-center gap-3 py-2">
         <div class="min-w-0 flex-1">
-          <p class="text-sm font-semibold leading-snug">${esc(line.station.name)} ${line.byWeight ? 'sandwich' : 'plate'}</p>
+          <p class="text-sm font-semibold leading-snug">${esc(line.station.name)} ${esc(line.station.builder.cart_label || (line.byWeight ? 'sandwich' : 'plate'))}</p>
           <p class="text-xs text-slate-500">${esc(line.picked.map((i) => i.name).join(', '))}</p>
         </div>
         <button type="button" data-plate-remove="${esc(line.station.id)}" aria-label="Remove ${esc(line.station.name)} selections"
@@ -735,8 +744,9 @@
     if (!bar || !state.menu) return;
     const { lines, count, subtotal, tax, total, hasWeight } = cartSummary();
     const taxed = taxRate() > 0;
+    const weighed = lines.filter((l) => l.byWeight).map((l) => l.station.name);
     const hint = count
-      ? `${taxed ? `incl. ${fmtPrice(tax)} ${esc(taxText())}` : 'No sales tax added'}${hasWeight ? ' · Deli by weight not included' : ''}`
+      ? `${taxed ? `incl. ${fmtPrice(tax)} ${esc(taxText())}` : 'No sales tax added'}${hasWeight ? ' · weighed items not included' : ''}`
       : 'Tap + Add on any item to estimate your total';
 
     const panel = `
@@ -747,13 +757,13 @@
         </div>
         ${lines.length
           ? `<ul class="mt-1 divide-y divide-slate-100">${lines.map(cartLineHtml).join('')}</ul>`
-          : '<p class="mt-2 text-sm text-slate-600">Your cart is empty. Tap <strong>+ Add</strong> on a menu item, or check items in the Deli Hult and Broad Grill calculators.</p>'}
+          : '<p class="mt-2 text-sm text-slate-600">Your cart is empty. Tap <strong>+ Add</strong> on a menu item, or check items in a station calculator.</p>'}
         <dl class="mt-3 space-y-1 border-t border-slate-200 pt-3 text-sm">
           <div class="flex justify-between"><dt>Subtotal</dt><dd>${fmtPrice(subtotal)}</dd></div>
           ${taxed ? `<div class="flex justify-between"><dt>${esc(taxText())}</dt><dd>${fmtPrice(tax)}</dd></div>` : ''}
           <div class="flex justify-between text-base font-extrabold text-brand-900"><dt>Estimated total</dt><dd>${fmtPrice(total)}</dd></div>
         </dl>
-        <p class="mt-2 text-xs text-slate-500">Estimate only. This is not an order; pay at the register, where prices and tax are final.${hasWeight ? ' Deli Hult is priced by weight and is not included in the total.' : ''}</p>
+        <p class="mt-2 text-xs text-slate-500">Estimate only. This is not an order; pay at the register, where prices and tax are final.${hasWeight ? ` ${esc(weighed.join(' and '))} ${weighed.length > 1 ? 'are' : 'is'} priced by weight and not included in the total.` : ''}</p>
       </div>`;
 
     bar.innerHTML = `
